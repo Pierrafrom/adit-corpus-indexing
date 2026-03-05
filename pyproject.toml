@@ -4,11 +4,27 @@ version = "0.1.0"
 description = "LO17 - ADIT corpus preparation: parse HTML bulletins and build an indexable XML file."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["mypy>=1.19.1", "pytest>=9.0.2", "ruff>=0.15.4"]
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "lxml>=6.0.2",
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "ruff>=0.15.4",
+    "types-beautifulsoup4>=4.12.0.20250516",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+] # erreurs/flake8, imports, pyupgrade, bugbear
 
 [tool.mypy]
 python_version = "3.12"
