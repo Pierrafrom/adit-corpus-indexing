@@ -21,7 +21,7 @@ workspace.code-workspace
 Thumbs.db
 
 # Project outputs / datasets
-data/
+# data/
 out/
 logs/
 

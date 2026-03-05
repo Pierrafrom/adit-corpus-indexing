@@ -1,11 +1,17 @@
 [project]
 name = "adit-corpus-indexing"
 version = "0.1.0"
-description = "Add your description here"
+description = "LO17 - ADIT corpus preparation: parse HTML bulletins and build an indexable XML file."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "mypy>=1.19.1",
-    "pytest>=9.0.2",
-    "ruff>=0.15.4",
-]
+dependencies = ["mypy>=1.19.1", "pytest>=9.0.2", "ruff>=0.15.4"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
