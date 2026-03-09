@@ -1,56 +1,67 @@
-# Copilot Instructions — LO17 (Printemps 2026) — ADIT Corpus Indexing
+# Copilot Instructions — adit-corpus-indexing
 
-## Contexte du projet
-Ce projet (LO17 — Indexation et Recherche d’information — TD1) consiste à préparer un corpus d’articles issus des bulletins ADIT (France, 2011–2014, ~300+ articles) afin de produire **un unique fichier XML** facilement indexable.
+## Language
+All code in English: variable names, function names, comments, docstrings.
+Lab reports in `reports/` are in French — do not translate them.
 
-Chaque article HTML contient des méta-informations (numéro bulletin, date, rubrique, titre, auteur, contacts…) et du contenu (texte, images, légendes…).  
-Le livrable du TD1 est un XML structuré comme suit :
+## Stack
+- Python 3.12+, managed with `uv` (never suggest `pip install`)
+- BeautifulSoup4 + lxml for HTML parsing
+- lxml.etree for XML construction — never build XML by string concatenation
+- pytest for tests
+- ruff for linting and formatting (replaces black + isort + flake8)
+- mypy in strict mode
 
-- `<corpus>`
-  - `<document>`
-    - `<article>` numéro d’article
-    - `<bulletin>` numéro du bulletin
-    - `<date>` jj/mm/aaaa
-    - `<rubrique>`
-    - `<titre>`
-    - `<auteur>`
-    - `<texte>`
-    - `<images>`
-      - `<image><urlImage>…</urlImage><legendeImage>…</legendeImage></image>` (0..n)
-    - `<contact>`
-  - …
+## Design
+- Prefer OOP: model domain concepts as classes (`Article`, `Corpus`, `XmlBuilder`...).
+  Use plain functions only when OOP would be meaningfully more complex — comment why.
 
-Le pipeline doit être **robuste** (HTML variable, champs parfois absents), **UTF-8 strict**, et produire un **rapport d’exhaustivité** (combien de fichiers traités, taux de présence par champ, erreurs par fichier).
+## Code style
+- Line length: 88 characters
+- Double quotes for strings
+- Full type annotations on every public function
+- `str | None` union syntax (Python 3.10+), not `Optional[str]`
+- `pathlib.Path` for all file paths, never `os.path`
+- `logging` for all output in `src/`, never `print()`
 
----
+```python
+# logger pattern — one per module
+import logging
+logger = logging.getLogger(__name__)
+```
 
-## Exigences de qualité du code (Clean Code)
-Je veux du **Python propre**, lisible et maintenable :
+## Architecture rules
+- One function = one responsibility. If "and" describes it, split it.
+- DRY in production code. Acceptable duplication in tests for clarity.
+- Package lives in `src/adit_corpus_indexing/` (underscores, not hyphens)
+- Generated files go in `outputs/` — never committed
 
-- Code clair, simple, sans “magie”.
-- Fonctions **courtes** (idéalement < 30–40 lignes), qui font **une seule chose** et la font bien.
-- Petits blocs faciles à relire et à debugger.
-- Nommage explicite (en anglais) : variables/fonctions/classes.
-- Typage systématique : `typing`, `dataclasses`, `Path`, `Optional`.
-- Gestion d’erreurs robuste : ne jamais arrêter le traitement global à cause d’un seul fichier.
-- Logging propre (niveau INFO/WARN/ERROR) + erreurs stockées dans un report.
-- Encodage : lire/écrire en **UTF-8**.
+## Defensive extraction (critical — corpus is noisy)
+Always guard before accessing `.text` or tag attributes.
 
----
+```python
+# ✅
+tag = soup.find("span", class_="date")
+if tag is None:
+    logger.warning("Missing date in %s", source_file)
+    return None
+return tag.get_text(strip=True)
 
-## Stack / outils modernes utilisés dans ce projet
-- **Python 3.12** (géré par `uv`)
-- **uv** : gestion projet/dépendances/venv/exécution (`uv init`, `uv add`, `uv run`)
-- **BeautifulSoup4** + **lxml** : parsing HTML robuste
-- **lxml.etree** : génération XML propre (escaping + pretty print)
-- **rich** ou **tqdm** : progression / affichage console
-- **python-dateutil** : parsing/normalisation dates si nécessaire
-- Qualité :
-  - **ruff** : lint + format
-  - **mypy** : type checking
-  - **pytest** : tests
+# ❌ will crash on missing fields
+return soup.find("span", class_="date").text
+```
 
----
+## UTF-8
+Every `open()` call must specify `encoding="utf-8"`.
+Use `errors="replace"` when reading source HTML files.
 
-## Organisation du code (architecture attendue)
-Utiliser un layout `src/` propre :
+## Tests
+- One test per extraction function minimum
+- Cover edge cases: missing field, empty value, accented characters
+- Fixtures in `tests/fixtures/` — real HTML samples from the corpus
+- Naming: `test_<function>_<expected_behaviour>`
+
+## Git
+- Conventional Commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`
+- Branch naming: `feat/<topic>`, `fix/<topic>`
+- Never suggest committing: `outputs/`, `data/`, `__pycache__/`, `.mypy_cache/`

@@ -1,0 +1,72 @@
+# =============================================================================
+# .gitattributes — line-ending normalisation + GitHub linguist hints
+# Rule: all text files use LF (this repo lives on Linux/WSL).
+# =============================================================================
+
+# Default: auto-detect text/binary, normalise to LF on commit
+* text=auto eol=lf
+
+# ---------------------------------------------------------------------------
+# Source code — force text + LF
+# ---------------------------------------------------------------------------
+*.py    text eol=lf
+*.toml  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.rst   text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+*.json  text eol=lf
+
+# Corpus source files
+*.htm   text eol=lf
+*.html  text eol=lf
+*.xml   text eol=lf
+
+# ---------------------------------------------------------------------------
+# Lock files — text but treat as generated (no language stats)
+# ---------------------------------------------------------------------------
+uv.lock text eol=lf linguist-generated=true
+
+# ---------------------------------------------------------------------------
+# Binary files — never diff or merge
+# ---------------------------------------------------------------------------
+*.pyc     binary
+*.pyo     binary
+*.pyd     binary
+
+# Images
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.svg     binary
+
+# Documents
+*.pdf     binary
+
+# Archives
+*.zip     binary
+*.tar     binary
+*.gz      binary
+
+# ---------------------------------------------------------------------------
+# GitHub Linguist — keep language stats meaningful
+# ---------------------------------------------------------------------------
+# Ignore lock files and generated artefacts in language breakdown
+uv.lock                      linguist-generated=true
+*.egg-info/**                linguist-generated=true
+
+# The corpus HTML files are data, not project source code
+data/**                      linguist-vendored=true
+
+# Fixture HTML files used in tests are test data, not web source
+tests/fixtures/**            linguist-documentation=true
+
+# ---------------------------------------------------------------------------
+# Merge strategy — never auto-merge lock files (always take incoming)
+# ---------------------------------------------------------------------------
+uv.lock merge=union
