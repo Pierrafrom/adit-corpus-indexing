@@ -63,7 +63,8 @@ def parse_date(soup: BeautifulSoup) -> date | None:
         return None
     raw = style42.get_text(strip=True)
     try:
-        day, month, year = int(raw[:2]), int(raw[3:5]), int(raw[6:])
+        parts = raw.split("/")
+        day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
         return date(year, month, day)
     except (ValueError, IndexError):
         logger.warning("Unparseable date value: %r", raw)

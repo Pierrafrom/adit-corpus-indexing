@@ -104,6 +104,16 @@ def test_parse_date_returns_none_when_no_style42_in_p() -> None:
     assert parse_date(_soup(html)) is None
 
 
+def test_parse_date_single_digit_day() -> None:
+    html = """
+    <p>
+      <span class="style32">BE France 258</span>
+      <span class="style42">3/06/2013</span>
+    </p>
+    """
+    assert parse_date(_soup(html)) == date(2013, 6, 3)
+
+
 # ---------------------------------------------------------------------------
 # parse_rubrique
 # ---------------------------------------------------------------------------
