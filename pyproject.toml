@@ -39,6 +39,15 @@ mypy_path = "src"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=adit_corpus_indexing --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/pipeline.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
 
 [dependency-groups]
 dev = [
