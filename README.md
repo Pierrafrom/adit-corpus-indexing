@@ -73,11 +73,23 @@ reports/            # lab reports (French)
 ### Branch workflow
 
 ```
-main          ← protected: CI required, 1 review required, linear history only
+main          ← protected (see rules below)
 feat/<topic>  ← feature branches — open a PR to merge into main
 fix/<topic>   ← bug fix branches
 refactor/...  ← refactoring branches
 ```
+
+### Branch protection rules on `main`
+
+| Rule | Effect |
+|---|---|
+| No direct push | All changes must go through a PR |
+| No force push | `git push --force` is rejected |
+| No deletion | The `main` branch cannot be deleted |
+| Linear history required | No merge commits — rebase or squash only |
+| 1 approval required | At least one reviewer must approve the PR |
+| Stale reviews dismissed | A new push invalidates previous approvals |
+| CI must be green | All 4 checks must pass before merge is allowed |
 
 ### To contribute
 
@@ -97,13 +109,15 @@ cp scripts/pre-push .git/hooks/pre-push
 chmod +x .git/hooks/pre-push
 ```
 
-Runs ruff lint, ruff format check, and pytest before every push.
+Runs ruff lint, ruff format check, and pytest before every push — catches failures locally before they reach GitHub.
 
 ### CI checks (run automatically on every push)
 
-- `ruff check` — linting
-- `ruff format --check` — formatting
-- `mypy` — type checking
-- `pytest` — unit tests
+| Check | Command |
+|---|---|
+| Ruff lint | `uv run ruff check src/ tests/` |
+| Ruff format | `uv run ruff format --check src/ tests/` |
+| Mypy | `uv run mypy src/` |
+| Pytest | `uv run pytest --tb=short -q` |
 
 All four must pass for a PR to be mergeable into `main`.
