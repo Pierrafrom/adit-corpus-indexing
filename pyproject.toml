@@ -8,13 +8,13 @@ version = "0.1.0"
 description = "LO17 - ADIT corpus preparation: parse HTML bulletins and build an indexable XML file."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "beautifulsoup4>=4.14.3",
-    "lxml>=6.0.2",
-]
+dependencies = ["beautifulsoup4>=4.14.3", "lxml>=6.0.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+adit_corpus_indexing = ["py.typed"]
 
 [tool.ruff]
 line-length = 88
@@ -35,6 +35,7 @@ python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_ignores = true
+mypy_path = "src"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
