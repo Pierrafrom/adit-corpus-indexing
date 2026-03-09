@@ -175,10 +175,10 @@ Pour les contacts, l'extraction est plus riche : une fois la cellule identifiée
 
 ```mermaid
 graph LR
-    pipeline["pipeline.py\nOrchestration"]
-    parser["parser.py\nExtraction HTML"]
-    xml_builder["xml_builder.py\nConstruction XML"]
-    models["models.py\nModèles de données"]
+    pipeline["pipeline.py<br>Orchestration"]
+    parser["parser.py<br>Extraction HTML"]
+    xml_builder["xml_builder.py<br>Construction XML"]
+    models["models.py<br>Modèles de données"]
 
     pipeline --> parser
     pipeline --> xml_builder
