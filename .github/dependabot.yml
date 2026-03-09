@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      dev-tools:
+        patterns: ["ruff", "mypy", "pytest*", "lxml-stubs", "types-*"]
+      runtime:
+        patterns: ["beautifulsoup4", "lxml"]
