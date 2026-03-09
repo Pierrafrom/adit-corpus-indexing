@@ -44,7 +44,7 @@ uv run mypy src/                 # type checking
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `ci.yml` | push / PR on `main` | ruff format + lint, mypy, pytest with coverage |
+| `ci.yml` | push on all branches / PR on `main` | ruff lint + format, mypy, pytest |
 | `corpus-run.yml` | manual (`workflow_dispatch`) | runs the pipeline, uploads `corpus.xml` as artifact |
 
 To trigger a corpus run: GitHub > Actions > **Corpus pipeline** > **Run workflow**.
@@ -67,3 +67,43 @@ outputs/            # generated files (not versioned)
 tests/              # pytest test suite
 reports/            # lab reports (French)
 ```
+
+## Contributing
+
+### Branch workflow
+
+```
+main          ← protected: CI required, 1 review required, linear history only
+feat/<topic>  ← feature branches — open a PR to merge into main
+fix/<topic>   ← bug fix branches
+refactor/...  ← refactoring branches
+```
+
+### To contribute
+
+```bash
+git checkout -b feat/my-feature
+# ... work ...
+git push origin feat/my-feature
+gh pr create   # open PR via GitHub CLI
+```
+
+### Local pre-push hook
+
+Install once after cloning:
+
+```bash
+cp scripts/pre-push .git/hooks/pre-push
+chmod +x .git/hooks/pre-push
+```
+
+Runs ruff lint, ruff format check, and pytest before every push.
+
+### CI checks (run automatically on every push)
+
+- `ruff check` — linting
+- `ruff format --check` — formatting
+- `mypy` — type checking
+- `pytest` — unit tests
+
+All four must pass for a PR to be mergeable into `main`.
