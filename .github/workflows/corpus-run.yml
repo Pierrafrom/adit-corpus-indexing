@@ -27,6 +27,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Download corpus
+        run: |
+          gh release download corpus-v1 --pattern "BULLETINS.zip" --dir data/
+          unzip -q data/BULLETINS.zip -d data/
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run pipeline
         run: uv run python -m adit_corpus_indexing.pipeline
         env:
