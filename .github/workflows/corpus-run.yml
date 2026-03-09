@@ -1,0 +1,41 @@
+name: Corpus pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample_size:
+        description: "Nombre de fichiers à traiter (0 = tous)"
+        default: "0"
+        required: false
+
+jobs:
+  run:
+    name: Generate corpus.xml
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run pipeline
+        run: uv run python -m adit_corpus_indexing.pipeline
+        env:
+          SAMPLE_SIZE: ${{ github.event.inputs.sample_size }}
+
+      - name: Upload corpus.xml
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpus-xml-${{ github.run_number }}
+          path: outputs/corpus.xml
+          if-no-files-found: error
+          retention-days: 30

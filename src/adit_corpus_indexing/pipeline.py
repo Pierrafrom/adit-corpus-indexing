@@ -1,6 +1,7 @@
 """Pipeline: parse all ADIT HTML bulletins and produce corpus.xml."""
 
 import logging
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -28,6 +29,10 @@ def run(
 ) -> None:
     """Parse all .htm files in *bulletins_dir* and write corpus.xml to *output_path*."""
     htm_files = sorted(bulletins_dir.glob("*.htm"))
+    sample = int(os.environ.get("SAMPLE_SIZE", "0"))
+    if sample > 0:
+        htm_files = htm_files[:sample]
+        logger.info("Sample mode: processing %d files", sample)
     if not htm_files:
         logger.error("No .htm files found in %s", bulletins_dir)
         return
