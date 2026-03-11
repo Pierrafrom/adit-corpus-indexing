@@ -9,34 +9,39 @@
 
 ## Sommaire
 
-1. [Objectif du TD](#1-objectif-du-td)
-2. [Architecture et conception](#2-architecture-et-conception)
-   - 2.1 [Diagramme de classes](#21-diagramme-de-classes)
-   - 2.2 [Flux d'exécution principal](#22-flux-dexécution-principal)
-   - 2.3 [Logique d'extraction](#23-logique-dextraction)
-   - 2.4 [Dépendances entre modules](#24-dépendances-entre-modules)
-3. [Réponse aux consignes](#3-réponse-aux-consignes)
-   - 3.1 [Construction du fichier XML unique](#31-construction-du-fichier-xml-unique)
-   - 3.2 [Extraction du numéro d'article](#32-extraction-du-numéro-darticle)
-   - 3.3 [Extraction du numéro de bulletin](#33-extraction-du-numéro-de-bulletin)
-   - 3.4 [Extraction de la date](#34-extraction-de-la-date)
-   - 3.5 [Extraction de la rubrique](#35-extraction-de-la-rubrique)
-   - 3.6 [Extraction du titre](#36-extraction-du-titre)
-   - 3.7 [Extraction de l'auteur](#37-extraction-de-lauteur)
-   - 3.8 [Extraction du texte](#38-extraction-du-texte)
-   - 3.9 [Extraction des images](#39-extraction-des-images-url-et-légende)
-   - 3.10 [Extraction des contacts](#310-extraction-des-contacts)
-   - 3.11 [Approche modulaire et incrémentale](#311-approche-modulaire-et-incrémentale)
-   - 3.12 [Exhaustivité et contrôle des erreurs](#312-exhaustivité-et-contrôle-des-erreurs)
-   - 3.13 [Compatibilité UTF-8](#313-compatibilité-utf-8)
-4. [Résultats d'exécution](#4-résultats-dexécution)
-   - 4.1 [Sortie du pipeline](#41-sortie-du-pipeline)
-   - 4.2 [Couverture du corpus](#42-couverture-du-corpus)
-   - 4.3 [Résultats des tests](#43-résultats-des-tests)
-   - 4.4 [Couverture de code](#44-couverture-de-code)
-5. [Extras](#5-extras)
-6. [Difficultés rencontrées](#6-difficultés-rencontrées)
-7. [Conclusion](#7-conclusion)
+- [Compte-rendu TD1 — Préparation du Corpus](#compte-rendu-td1--préparation-du-corpus)
+  - [Sommaire](#sommaire)
+  - [1. Objectif du TD](#1-objectif-du-td)
+  - [2. Architecture et conception](#2-architecture-et-conception)
+    - [2.1 Diagramme de classes](#21-diagramme-de-classes)
+    - [2.2 Flux d'exécution principal](#22-flux-dexécution-principal)
+    - [2.3 Logique d'extraction](#23-logique-dextraction)
+    - [2.4 Dépendances entre modules](#24-dépendances-entre-modules)
+  - [3. Réponse aux consignes](#3-réponse-aux-consignes)
+    - [3.1 Construction du fichier XML unique](#31-construction-du-fichier-xml-unique)
+    - [3.2 Extraction du numéro d'article](#32-extraction-du-numéro-darticle)
+    - [3.3 Extraction du numéro de bulletin](#33-extraction-du-numéro-de-bulletin)
+    - [3.4 Extraction de la date](#34-extraction-de-la-date)
+    - [3.5 Extraction de la rubrique](#35-extraction-de-la-rubrique)
+    - [3.6 Extraction du titre](#36-extraction-du-titre)
+    - [3.7 Extraction de l'auteur](#37-extraction-de-lauteur)
+    - [3.8 Extraction du texte](#38-extraction-du-texte)
+    - [3.9 Extraction des images (URL et légende)](#39-extraction-des-images-url-et-légende)
+    - [3.10 Extraction des contacts](#310-extraction-des-contacts)
+    - [3.11 Approche modulaire et incrémentale](#311-approche-modulaire-et-incrémentale)
+    - [3.12 Exhaustivité et contrôle des erreurs](#312-exhaustivité-et-contrôle-des-erreurs)
+    - [3.13 Compatibilité UTF-8](#313-compatibilité-utf-8)
+  - [4. Résultats d'exécution](#4-résultats-dexécution)
+    - [4.1 Sortie du pipeline](#41-sortie-du-pipeline)
+    - [4.2 Couverture du corpus](#42-couverture-du-corpus)
+    - [4.3 Résultats des tests](#43-résultats-des-tests)
+    - [4.4 Couverture de code](#44-couverture-de-code)
+  - [5. Extras](#5-extras)
+    - [Modélisation riche des contacts (`Contact` et `Person`)](#modélisation-riche-des-contacts-contact-et-person)
+    - [Mode échantillon (`SAMPLE_SIZE`)](#mode-échantillon-sample_size)
+    - [Déduplication des articles](#déduplication-des-articles)
+  - [6. Difficultés rencontrées](#6-difficultés-rencontrées)
+  - [7. Conclusion](#7-conclusion)
 
 ---
 
@@ -401,7 +406,7 @@ for field in _FIELDS:
 
 ### 4.1 Sortie du pipeline
 
-```
+```text
 INFO __main__: Found 326 bulletin files
 INFO adit_corpus_indexing.xml_builder: Corpus written to outputs/corpus.xml (326 documents)
 INFO __main__: ==================================================
@@ -437,13 +442,13 @@ Le corpus contient 1630 entrées `<image>` au total (environ 5 par article en mo
 
 ### 4.3 Résultats des tests
 
-```
+```text
 75 passed in 0.17s
 ```
 
 ### 4.4 Couverture de code
 
-```
+```text
 Name                                      Stmts   Miss  Cover   Missing
 -----------------------------------------------------------------------
 src/adit_corpus_indexing/__init__.py          0      0   100%
