@@ -39,13 +39,12 @@ def parse_code(soup: BeautifulSoup) -> str:
 
 
 def parse_bulletin(soup: BeautifulSoup) -> str:
-    """Bulletin number (e.g. "258") — style32.
-    We remove "BE France" because we have it everywhere"""
+    """Bulletin identifier (e.g. "BE France 258") — style32."""
     tag = soup.find("span", class_="style32")
     if not isinstance(tag, Tag):
         logger.warning("Missing bulletin number (style32 not found)")
         return ""
-    return tag.get_text(strip=True).replace("BE France", "").strip()
+    return tag.get_text(strip=True)
 
 
 def parse_date(soup: BeautifulSoup) -> date | None:
