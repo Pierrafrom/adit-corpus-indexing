@@ -17,6 +17,12 @@ class Contact:
 
 
 @dataclass
+class Image:
+    url: str
+    legend: str | None
+
+
+@dataclass
 class Article:
     code: str
     bulletin: str
@@ -25,5 +31,5 @@ class Article:
     title: str
     author: Person | None
     body: str
-    images: list[str]
+    images: list[Image]
     contacts: list[Contact] = field(default_factory=list)

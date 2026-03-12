@@ -76,6 +76,7 @@ def test_build_document_element_images_element(sample_article: Article) -> None:
     assert images_el is not None
     assert len(images_el) == 1
     assert images_el[0].findtext("urlImage") == "images/photo.jpg"
+    assert images_el[0].findtext("legendeImage") == "Photo de test"
 
 
 def test_build_document_element_no_images(minimal_article: Article) -> None:
