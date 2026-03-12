@@ -253,23 +253,31 @@ def test_parse_contacts_filters_empty_contacts() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_parse_images_returns_urls(sample_soup: BeautifulSoup) -> None:
+def test_parse_images_returns_image_objects(sample_soup: BeautifulSoup) -> None:
     images = parse_images(sample_soup)
     assert len(images) == 1
-    assert "photo_mathias_fink.jpg" in images[0]
+    assert "photo_mathias_fink.jpg" in images[0].url
+    assert images[0].legend == "Photo de Mathias Fink"
 
 
 def test_parse_images_excludes_clear_gif(sample_soup: BeautifulSoup) -> None:
     images = parse_images(sample_soup)
-    assert not any("_clear.gif" in url for url in images)
+    assert not any("_clear.gif" in img.url for img in images)
 
 
 def test_parse_images_excludes_resources(sample_soup: BeautifulSoup) -> None:
     images = parse_images(sample_soup)
-    assert not any("Resources/" in url for url in images)
+    assert not any("/Resources" in img.url for img in images)
 
 
-def test_parse_images_returns_empty_when_no_sidebar(
+def test_parse_images_none_legend_when_no_style21() -> None:
+    html = '<div style="text-align: center"><img src="photo.jpg"/></div>'
+    images = parse_images(_soup(html))
+    assert len(images) == 1
+    assert images[0].legend is None
+
+
+def test_parse_images_returns_empty_when_no_divs(
     minimal_soup: BeautifulSoup,
 ) -> None:
     assert parse_images(minimal_soup) == []

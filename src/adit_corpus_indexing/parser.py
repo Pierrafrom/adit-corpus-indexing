@@ -7,7 +7,7 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup, Tag
 
-from .models import Article, Contact, Person
+from .models import Article, Contact, Image, Person
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def parse_code(soup: BeautifulSoup) -> str:
 
 
 def parse_bulletin(soup: BeautifulSoup) -> str:
-    """Bulletin number (e.g. "BE France 258") — style32."""
+    """Bulletin identifier (e.g. "BE France 258") — style32."""
     tag = soup.find("span", class_="style32")
     if not isinstance(tag, Tag):
         logger.warning("Missing bulletin number (style32 not found)")
@@ -229,17 +229,26 @@ def parse_contacts(soup: BeautifulSoup) -> list[Contact]:
 # ---------------------------------------------------------------------------
 
 
-def parse_images(soup: BeautifulSoup) -> list[str]:
-    """Image URLs from the left sidebar (td.FWExtra), excluding spacers."""
-    sidebar = soup.find("td", class_="FWExtra")
-    if not isinstance(sidebar, Tag):
-        return []
-    return [
-        str(img["src"])
-        for img in sidebar.find_all("img")
-        if "_clear.gif" not in str(img.get("src", ""))
-        and "Resources/" not in str(img.get("src", ""))
-    ]
+def parse_images(soup: BeautifulSoup) -> list[Image]:
+    """Article images with captions from centered div blocks in the article body."""
+    images: list[Image] = []
+
+    def _has_text_align(s: str | None) -> bool:
+        return s is not None and "text-align" in s
+
+    for div in soup.find_all("div", style=_has_text_align):
+        img = div.find("img")
+        if not isinstance(img, Tag):
+            continue
+        src = str(img.get("src", ""))
+        if "_clear.gif" in src or "/Resources" in src:
+            continue
+        legend_span = div.find("span", class_="style21")
+        legend = (
+            legend_span.get_text(strip=True) if isinstance(legend_span, Tag) else None
+        )
+        images.append(Image(url=src, legend=legend))
+    return images
 
 
 # ---------------------------------------------------------------------------

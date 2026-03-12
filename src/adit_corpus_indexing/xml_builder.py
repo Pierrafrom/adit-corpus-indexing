@@ -41,12 +41,12 @@ def build_document_element(article: Article) -> etree._Element:
     _set_text(texte_el, article.body)
 
     images_el = etree.SubElement(doc, "images")
-    for url in article.images:
+    for image in article.images:
         image_el = etree.SubElement(images_el, "image")
         url_el = etree.SubElement(image_el, "urlImage")
-        _set_text(url_el, url)
+        _set_text(url_el, image.url)
         legende_el = etree.SubElement(image_el, "legendeImage")
-        _set_text(legende_el, "")
+        _set_text(legende_el, image.legend)
 
     contact_el = etree.SubElement(doc, "contact")
     _set_text(

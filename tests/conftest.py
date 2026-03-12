@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-from adit_corpus_indexing.models import Article, Contact, Person
+from adit_corpus_indexing.models import Article, Contact, Image, Person
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -46,7 +46,7 @@ def sample_article() -> Article:
         title="Mathias Fink, un bel exemple de chercheur qui innove",
         author=Person(name="Jean Dupont", email="jean.dupont@adit.fr"),
         body="Premier paragraphe.\n\nDeuxième paragraphe.",
-        images=["images/photo.jpg"],
+        images=[Image(url="images/photo.jpg", legend="Photo de test")],
         contacts=[
             Contact(
                 name="Institut Langevin",
