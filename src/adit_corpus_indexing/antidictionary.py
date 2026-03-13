@@ -73,6 +73,7 @@ def apply_to_corpus(
     #   3. write the modified tree to output_path (UTF-8, pretty_print=True)
     raise NotImplementedError
 
+
 # --- Fonction interne pour extraire le contenu d'une balise ---
 # Cherche les balises d'ouverture et de fermeture,
 # puis récupère le texte entre les deux
@@ -119,13 +120,12 @@ def segmente(chemin_xml: str, chemin_sortie: str = "tokens.tsv") -> str:
 
     # ===== ÉTAPE 3 : Traiter chaque document =====
     for doc in documents:
-
         # Extraire l'identifiant (le numéro d'article)
-        identifiant = extraire(doc,"article")
+        identifiant = extraire(doc, "article")
         # Extraire le titre
-        titre = extraire(doc,"titre")
+        titre = extraire(doc, "titre")
         # Extraire le corps du texte
-        texte = extraire(doc,"texte")
+        texte = extraire(doc, "texte")
         # Combiner titre et texte pour une tokenisation complète
         contenu_doc = titre + " " + texte
 
@@ -166,7 +166,8 @@ def segmente(chemin_xml: str, chemin_sortie: str = "tokens.tsv") -> str:
     print(f"✓ {nb_tokens} tokens écrits dans '{chemin_sortie}'")
     return chemin_sortie
 
-#Question 2 : Compter les occurrences de tokens dans les documents
+
+# Question 2 : Compter les occurrences de tokens dans les documents
 def compter_occurences(chemin_tsv: str) -> dict[str, int]:
     """
     Compte le nombre d'occurrences de chaque token dans chaque document.
@@ -211,9 +212,10 @@ def construire_fichier_occurences(
             f.write(f"{id}\t{token}\t{count}\n")
     print(f"✓ Occurrences écrites dans '{chemin_sortie}'")
 
-#Question 3 : Compter le nombre de documents par token et calculer les coefficients IDF
+
+# Question 3 : Compter le nombre de documents par token et calculer les coefficients IDF
 def compter_apparitions_documents(
-    occurrences: dict[tuple[str, str], int]
+    occurrences: dict[tuple[str, str], int],
 ) -> dict[str, tuple[list[str], int]]:
     """Compte le nombre de documents dans lesquels chaque token apparaît.
 
@@ -228,7 +230,7 @@ def compter_apparitions_documents(
     """
 
     doc_counts: dict[str, tuple[list[str], int]] = {}
-    for (id_doc, token) in occurrences.keys():
+    for id_doc, token in occurrences.keys():
         if token not in doc_counts:
             # Première apparition du token : on crée la structure
             doc_counts[token] = ([id_doc], 1)
@@ -239,6 +241,7 @@ def compter_apparitions_documents(
             doc_counts[token] = (docs, count + 1)
 
     return doc_counts
+
 
 def creer_coefficients(doc_counts: dict[str, int], total_docs: int) -> dict[str, float]:
     """
@@ -256,6 +259,7 @@ def creer_coefficients(doc_counts: dict[str, int], total_docs: int) -> dict[str,
         idf_scores[token] = math.log(total_docs / count, 10)  # IDF = log(N / df)
     return idf_scores
 
+
 def construire_fichier_idf(idf_scores: dict[str, float], chemin_sortie: str) -> None:
     """
     Écrit les scores IDF dans un fichier TSV.
@@ -270,9 +274,10 @@ def construire_fichier_idf(idf_scores: dict[str, float], chemin_sortie: str) -> 
             f.write(f"{token}\t{idf}\n")
     print(f"✓ IDF scores écrits dans '{chemin_sortie}'")
 
+
 def creer_tf_idf(
-        occurrences: dict[tuple[str, str], int],
-        idf_scores: dict[str, float]) -> dict[tuple[str, str], float]:
+    occurrences: dict[tuple[str, str], int], idf_scores: dict[str, float]
+) -> dict[tuple[str, str], float]:
     """
     Calcule les scores TF-IDF pour chaque token dans chaque document.
 
@@ -289,9 +294,10 @@ def creer_tf_idf(
         tf_idf_scores[(id_doc, token)] = tf * idf  # TF-IDF = TF * IDF
     return tf_idf_scores
 
+
 def construire_fichier_tf_idf(
-        tf_idf_scores: dict[tuple[str, str], float],
-          chemin_sortie: str) -> None:
+    tf_idf_scores: dict[tuple[str, str], float], chemin_sortie: str
+) -> None:
     """
     Écrit les scores TF-IDF dans un fichier TSV.
 
@@ -304,6 +310,7 @@ def construire_fichier_tf_idf(
         for (id_doc, token), tf_idf in tf_idf_scores.items():
             f.write(f"{id_doc}\t{token}\t{tf_idf}\n")
     print(f"✓ TF-IDF scores écrits dans '{chemin_sortie}'")
+
 
 # Pour les tests, on peut exécuter ce script directement
 # pour produire les fichiers tokens.tsv et occurrences.tsv
