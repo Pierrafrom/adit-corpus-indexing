@@ -1,7 +1,10 @@
 """TD2 — Anti-dictionary: identify stop words and apply substitutions."""
 
 import logging
+<<<<<<< HEAD
 import math
+=======
+>>>>>>> 1f956f62a2b92fb9d7a4f4061227419f6eb58228
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -72,6 +75,7 @@ def apply_to_corpus(
     #   2. for each <document>, apply substitue() to <titre> and <texte> text
     #   3. write the modified tree to output_path (UTF-8, pretty_print=True)
     raise NotImplementedError
+<<<<<<< HEAD
 
 
 def segmente(chemin_xml: str, chemin_sortie: str = "tokens.tsv") -> str:
@@ -312,3 +316,5 @@ if __name__ == "__main__":
     construire_fichier_idf(idf_scores, "outputs/idf.tsv")
     tf_idf_scores = creer_tf_idf(occ, idf_scores)
     construire_fichier_tf_idf(tf_idf_scores, "outputs/tf_idf.tsv")
+=======
+>>>>>>> 1f956f62a2b92fb9d7a4f4061227419f6eb58228
