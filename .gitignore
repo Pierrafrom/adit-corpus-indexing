@@ -49,6 +49,7 @@ desktop.ini
 outputs/
 out/
 logs/
+tokens.tsv
 
 # =============================================================================
 # Project — corpus data (read-only source, too large for git)

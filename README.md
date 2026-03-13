@@ -20,7 +20,7 @@ uv sync         # install project dependencies
 uv run python -m adit_corpus_indexing.pipeline
 ```
 
-Reads all HTML files from `data/BULLETINS/` and generates `outputs/corpus.xml`.
+Reads all HTML files from `data/` and generates `outputs/corpus.xml`.
 
 ### Tests
 

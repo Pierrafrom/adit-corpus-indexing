@@ -24,7 +24,7 @@ def _field_present(article: object, field: str) -> bool:
 
 
 def run(
-    bulletins_dir: Path = Path("data/BULLETINS"),
+    bulletins_dir: Path = Path("data"),
     output_path: Path = Path("outputs/corpus.xml"),
 ) -> None:
     """Parse all .htm files in *bulletins_dir* and write corpus.xml to *output_path*."""
