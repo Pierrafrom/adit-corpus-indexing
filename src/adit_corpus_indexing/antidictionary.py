@@ -1,10 +1,7 @@
 """TD2 — Anti-dictionary: identify stop words and apply substitutions."""
 
 import logging
-<<<<<<< HEAD
 import math
-=======
->>>>>>> 1f956f62a2b92fb9d7a4f4061227419f6eb58228
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
