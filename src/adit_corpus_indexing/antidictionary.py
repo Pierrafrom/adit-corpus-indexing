@@ -1,10 +1,7 @@
 """TD2 — Anti-dictionary: identify stop words and apply substitutions."""
 
 import logging
-<<<<<<< HEAD
 import math
-=======
->>>>>>> 1f956f62a2b92fb9d7a4f4061227419f6eb58228
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -75,7 +72,21 @@ def apply_to_corpus(
     #   2. for each <document>, apply substitue() to <titre> and <texte> text
     #   3. write the modified tree to output_path (UTF-8, pretty_print=True)
     raise NotImplementedError
-<<<<<<< HEAD
+
+# --- Fonction interne pour extraire le contenu d'une balise ---
+# Cherche les balises d'ouverture et de fermeture,
+# puis récupère le texte entre les deux
+def extraire(doc: str, balise: str) -> str:
+    # Cherche la position du début : "<balise>"
+    debut = doc.find(f"<{balise}>")
+    # Cherche la position du débout de la fermeture : "</balise>"
+    fin = doc.find(f"</{balise}>")
+    # Si l'une des balises est manquante, retourner chaîne vide
+    if debut == -1 or fin == -1:
+        return ""
+    # Extraire le texte : on saute "<balise>" (len(balise) + 2 caractères: < et >)
+    # jusqu'au début de "</balise>"
+    return doc[debut + len(balise) + 2 : fin].strip()
 
 
 def segmente(chemin_xml: str, chemin_sortie: str = "tokens.tsv") -> str:
@@ -99,7 +110,8 @@ def segmente(chemin_xml: str, chemin_sortie: str = "tokens.tsv") -> str:
     # On divise le contenu sur la balise "<document>".
     # - Le premier élément [0] est l'en-tête du corpus (avant le premier <document>)
     # - Les éléments [1:] sont les documents eux-mêmes
-    # Exemple: "<corpus>...</corpus><document>doc1</doc..." → ['<corpus>...</corpus>', 'doc1</doc...', ...]
+    # Exemple: "<corpus>...</corpus><document>doc1</doc..."
+    # → ['<corpus>...</corpus>', 'doc1</doc...', ...]
     documents = contenu.split("<document>")[1:]  # [0] est l'en-tête du corpus
 
     # Initialiser la liste des lignes avec l'en-tête TSV
@@ -107,26 +119,13 @@ def segmente(chemin_xml: str, chemin_sortie: str = "tokens.tsv") -> str:
 
     # ===== ÉTAPE 3 : Traiter chaque document =====
     for doc in documents:
-        # --- Fonction interne pour extraire le contenu d'une balise ---
-        # Cherche les balises d'ouverture et de fermeture, puis récupère le texte entre les deux
-        def extraire(balise) -> str:
-            # Cherche la position du début : "<balise>"
-            debut = doc.find(f"<{balise}>")
-            # Cherche la position du débout de la fermeture : "</balise>"
-            fin = doc.find(f"</{balise}>")
-            # Si l'une des balises est manquante, retourner chaîne vide
-            if debut == -1 or fin == -1:
-                return ""
-            # Extraire le texte : on saute "<balise>" (len(balise) + 2 caractères: < et >)
-            # jusqu'au début de "</balise>"
-            return doc[debut + len(balise) + 2 : fin].strip()
 
         # Extraire l'identifiant (le numéro d'article)
-        identifiant = extraire("article")
+        identifiant = extraire(doc,"article")
         # Extraire le titre
-        titre = extraire("titre")
+        titre = extraire(doc,"titre")
         # Extraire le corps du texte
-        texte = extraire("texte")
+        texte = extraire(doc,"texte")
         # Combiner titre et texte pour une tokenisation complète
         contenu_doc = titre + " " + texte
 
@@ -157,7 +156,8 @@ def segmente(chemin_xml: str, chemin_sortie: str = "tokens.tsv") -> str:
             lignes.append(f"{identifiant}\t{token.lower()}")
 
     # ===== ÉTAPE 6 : Écrire le fichier TSV =====
-    # Ouvrir un fichier en écriture et y écrire toutes les lignes séparées par des retours à la ligne
+    # Ouvrir un fichier en écriture et y écrire
+    # toutes les lignes séparées par des retours à la ligne
     with open(chemin_sortie, "w", encoding="utf-8") as f:
         f.write("\n".join(lignes))
 
@@ -270,7 +270,9 @@ def construire_fichier_idf(idf_scores: dict[str, float], chemin_sortie: str) -> 
             f.write(f"{token}\t{idf}\n")
     print(f"✓ IDF scores écrits dans '{chemin_sortie}'")
 
-def creer_tf_idf(occurrences: dict[tuple[str, str], int], idf_scores: dict[str, float]) -> dict[tuple[str, str], float]:
+def creer_tf_idf(
+        occurrences: dict[tuple[str, str], int],
+        idf_scores: dict[str, float]) -> dict[tuple[str, str], float]:
     """
     Calcule les scores TF-IDF pour chaque token dans chaque document.
 
@@ -287,7 +289,9 @@ def creer_tf_idf(occurrences: dict[tuple[str, str], int], idf_scores: dict[str, 
         tf_idf_scores[(id_doc, token)] = tf * idf  # TF-IDF = TF * IDF
     return tf_idf_scores
 
-def construire_fichier_tf_idf(tf_idf_scores: dict[tuple[str, str], float], chemin_sortie: str) -> None:
+def construire_fichier_tf_idf(
+        tf_idf_scores: dict[tuple[str, str], float],
+          chemin_sortie: str) -> None:
     """
     Écrit les scores TF-IDF dans un fichier TSV.
 
@@ -301,7 +305,9 @@ def construire_fichier_tf_idf(tf_idf_scores: dict[tuple[str, str], float], chemi
             f.write(f"{id_doc}\t{token}\t{tf_idf}\n")
     print(f"✓ TF-IDF scores écrits dans '{chemin_sortie}'")
 
-# Pour les tests, on peut exécuter ce script directement pour produire les fichiers tokens.tsv et occurrences.tsv à partir du corpus.xml généré précédemment.
+# Pour les tests, on peut exécuter ce script directement
+# pour produire les fichiers tokens.tsv et occurrences.tsv
+# à partir du corpus.xml généré précédemment.
 if __name__ == "__main__":
     segmente(r"outputs/corpus.xml", "outputs/tokens.tsv")
     occ = compter_occurences("outputs/tokens.tsv")
@@ -312,9 +318,7 @@ if __name__ == "__main__":
         for cle in doc_counts.keys():
             # f.write(f"{cle}\t{', '.join(occ[cle])}\n")
             f.write(f"{cle}\t->\t{doc_counts[cle]}\n")
-    idf_scores = creer_coefficients(doc_counts, total_docs=326)  # Supposons 100 documents
+    idf_scores = creer_coefficients(doc_counts, total_docs=326)
     construire_fichier_idf(idf_scores, "outputs/idf.tsv")
     tf_idf_scores = creer_tf_idf(occ, idf_scores)
-    construire_fichier_tf_idf(tf_idf_scores, "outputs/tf_idf.tsv")
-=======
->>>>>>> 1f956f62a2b92fb9d7a4f4061227419f6eb58228
+    construire_fichier_tf_idf(tf_idf_scores, "outputs/tf_idf.tsv ")
