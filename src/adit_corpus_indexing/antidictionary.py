@@ -72,7 +72,6 @@ def apply_to_corpus(
     #   2. for each <document>, apply substitue() to <titre> and <texte> text
     #   3. write the modified tree to output_path (UTF-8, pretty_print=True)
     raise NotImplementedError
-<<<<<<< HEAD
 
 
 def segmente(chemin_xml: str, chemin_sortie: str = "tokens.tsv") -> str:
@@ -312,6 +311,4 @@ if __name__ == "__main__":
     idf_scores = creer_coefficients(doc_counts, total_docs=326)  # Supposons 100 documents
     construire_fichier_idf(idf_scores, "outputs/idf.tsv")
     tf_idf_scores = creer_tf_idf(occ, idf_scores)
-    construire_fichier_tf_idf(tf_idf_scores, "outputs/tf_idf.tsv")
-=======
->>>>>>> 1f956f62a2b92fb9d7a4f4061227419f6eb58228
+    construire_fichier_tf_idf(tf_idf_scores, "outputs/tf_idf.tsv ")
