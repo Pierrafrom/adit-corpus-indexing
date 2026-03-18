@@ -12,6 +12,12 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture()
+def mini_corpus_path() -> Path:
+    """Path to the small 3-document corpus XML fixture for TD2 tests."""
+    return FIXTURES_DIR / "mini_corpus.xml"
+
+
+@pytest.fixture()
 def sample_html_path() -> Path:
     """Path to the complete sample bulletin HTML fixture."""
     return FIXTURES_DIR / "sample_article.html"

@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<corpus>
+  <document>
+    <article>1</article>
+    <bulletin>BE France 1</bulletin>
+    <date>01/01/2011</date>
+    <rubrique>Physique</rubrique>
+    <titre>Le chat mange la souris</titre>
+    <texte>Un chien court vite dans le jardin.</texte>
+  </document>
+  <document>
+    <article>2</article>
+    <bulletin>BE France 2</bulletin>
+    <date>02/01/2011</date>
+    <rubrique>Chimie</rubrique>
+    <titre>Le soleil brille fort</titre>
+    <texte>Un oiseau chante dans le ciel bleu.</texte>
+  </document>
+  <document>
+    <article>3</article>
+    <bulletin>BE France 3</bulletin>
+    <date>03/01/2011</date>
+    <rubrique>Biologie</rubrique>
+    <titre>Recherches avancées en biologie</titre>
+    <texte>Des chercheurs étudient les cellules vivantes.</texte>
+  </document>
+</corpus>
