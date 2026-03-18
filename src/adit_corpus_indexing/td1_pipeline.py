@@ -1,4 +1,4 @@
-"""Pipeline: parse all ADIT HTML bulletins and produce corpus.xml."""
+"""TD1 — Pipeline: parse all ADIT HTML bulletins and produce corpus.xml."""
 
 import logging
 import os
@@ -88,8 +88,13 @@ def run(
     logger.info(sep)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Entry point for the ``td1`` console script."""
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s %(name)s: %(message)s"
     )
     run()
+
+
+if __name__ == "__main__":
+    main()

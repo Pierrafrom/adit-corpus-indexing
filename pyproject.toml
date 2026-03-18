@@ -10,6 +10,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["beautifulsoup4>=4.14.3", "lxml>=6.0.2"]
 
+[project.scripts]
+td1           = "adit_corpus_indexing.td1_pipeline:main"
+td2           = "adit_corpus_indexing.td2_pipeline:main"
+adit-pipeline = "adit_corpus_indexing.full_pipeline:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
@@ -43,7 +48,7 @@ addopts = "--cov=adit_corpus_indexing --cov-report=term-missing"
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["*/pipeline.py"]
+omit = ["*/td1_pipeline.py", "*/td2_pipeline.py", "*/full_pipeline.py"]
 
 [tool.coverage.report]
 fail_under = 80
