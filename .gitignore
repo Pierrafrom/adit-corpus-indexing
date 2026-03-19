@@ -49,6 +49,7 @@ desktop.ini
 outputs/
 out/
 logs/
+backup/
 
 # =============================================================================
 # Project — corpus data (read-only source, too large for git)
@@ -70,3 +71,4 @@ data/BULLETINS/
 *.bak
 *.swp
 *.swo
+
