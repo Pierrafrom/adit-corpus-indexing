@@ -120,9 +120,7 @@ def compute_tfidf(tf_path: Path, idf_path: Path, output_path: Path) -> None:
                 continue
             parts = line.split("\t", 1)
             if len(parts) != 2:
-                logger.warning(
-                    "compute_tfidf: malformed idf line %d — skipped", lineno
-                )
+                logger.warning("compute_tfidf: malformed idf line %d — skipped", lineno)
                 continue
             idf[parts[0]] = float(parts[1])
 
@@ -134,9 +132,7 @@ def compute_tfidf(tf_path: Path, idf_path: Path, output_path: Path) -> None:
                 continue
             parts = line.split("\t")
             if len(parts) != 3:
-                logger.warning(
-                    "compute_tfidf: malformed tf line %d — skipped", lineno
-                )
+                logger.warning("compute_tfidf: malformed tf line %d — skipped", lineno)
                 continue
             doc_id, token, tf_val = parts
             tfidf_score = float(tf_val) * idf.get(token, 0.0)

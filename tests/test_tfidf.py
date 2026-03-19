@@ -191,9 +191,7 @@ class TestComputeTFIDF:
         out = tmp_path / "tfidf.tsv"
         compute_tfidf(tf_path, idf_path, out)
         scores = _read_tfidf(out)
-        assert scores[("1", "chat")] == pytest.approx(
-            1.30103 * math.log10(2), rel=1e-5
-        )
+        assert scores[("1", "chat")] == pytest.approx(1.30103 * math.log10(2), rel=1e-5)
 
     def test_token_not_in_idf_gets_zero_score(self, tmp_path: Path) -> None:
         tf_path = tmp_path / "tf.tsv"
@@ -230,9 +228,7 @@ class TestComputeTFIDF:
         scores = _read_tfidf(out)
         assert len(scores) == 2
 
-    def test_pipeline_integration(
-        self, mini_corpus_path: Path, tmp_path: Path
-    ) -> None:
+    def test_pipeline_integration(self, mini_corpus_path: Path, tmp_path: Path) -> None:
         """Full pipeline: segmente → tf → idf → tfidf."""
         from adit_corpus_indexing.tokenizer import segmente
 

@@ -184,31 +184,24 @@ class TestSegmente:
         out = tmp_path / "tokens.tsv"
         segmente(mini_corpus_path, out)
         doc_ids = {
-            line.split("\t")[0]
-            for line in out.read_text(encoding="utf-8").splitlines()
+            line.split("\t")[0] for line in out.read_text(encoding="utf-8").splitlines()
         }
         assert doc_ids == {"1", "2", "3"}
 
-    def test_tokens_are_lowercase(
-        self, mini_corpus_path: Path, tmp_path: Path
-    ) -> None:
+    def test_tokens_are_lowercase(self, mini_corpus_path: Path, tmp_path: Path) -> None:
         out = tmp_path / "tokens.tsv"
         segmente(mini_corpus_path, out)
         tokens = [
-            line.split("\t")[1]
-            for line in out.read_text(encoding="utf-8").splitlines()
+            line.split("\t")[1] for line in out.read_text(encoding="utf-8").splitlines()
         ]
         for token in tokens:
             assert token == token.lower(), f"Token not lowercased: {token!r}"
 
-    def test_known_tokens_appear(
-        self, mini_corpus_path: Path, tmp_path: Path
-    ) -> None:
+    def test_known_tokens_appear(self, mini_corpus_path: Path, tmp_path: Path) -> None:
         out = tmp_path / "tokens.tsv"
         segmente(mini_corpus_path, out)
         all_tokens = {
-            line.split("\t")[1]
-            for line in out.read_text(encoding="utf-8").splitlines()
+            line.split("\t")[1] for line in out.read_text(encoding="utf-8").splitlines()
         }
         # Words present in fixture titles/texts
         assert "chat" in all_tokens
