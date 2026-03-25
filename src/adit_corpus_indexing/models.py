@@ -33,3 +33,13 @@ class Article:
     body: str
     images: list[Image]
     contacts: list[Contact] = field(default_factory=list)
+
+
+@dataclass
+class LemmatizedToken:
+    """Représente un token lemmatisé et stemmé."""
+
+    article_id: str
+    token: str
+    lemma: str
+    stem: str
