@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=4.14.3",
+    "fr-core-news-sm",
     "jupyter>=1.1.1",
     "lxml>=6.0.2",
     "matplotlib>=3.10.8",
@@ -19,8 +20,9 @@ dependencies = [
 ]
 
 [project.scripts]
-td1           = "adit_corpus_indexing.td1_pipeline:main"
-td2           = "adit_corpus_indexing.td2_pipeline:main"
+td1 = "adit_corpus_indexing.td1_pipeline:main"
+td2 = "adit_corpus_indexing.td2_pipeline:main"
+td3 = "adit_corpus_indexing.td3_pipeline:main"
 adit-pipeline = "adit_corpus_indexing.full_pipeline:main"
 
 [tool.setuptools.packages.find]
@@ -59,6 +61,7 @@ source = ["src"]
 omit = [
     "*/td1_pipeline.py",
     "*/td2_pipeline.py",
+    "*/td3_pipeline.py",
     "*/full_pipeline.py",
     "*/lemmatisation.py",
     "*/display_antidict.py",
@@ -69,6 +72,9 @@ omit = [
 [tool.coverage.report]
 fail_under = 80
 show_missing = true
+
+[tool.uv.sources]
+fr-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl" }
 
 [dependency-groups]
 dev = [
