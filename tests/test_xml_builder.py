@@ -7,7 +7,7 @@ import pytest
 from lxml import etree
 
 from adit_corpus_indexing.models import Article, Contact, Person
-from adit_corpus_indexing.xml_builder import CorpusBuilder, build_document_element
+from adit_corpus_indexing.io.xml_builder import CorpusBuilder, build_document_element
 
 # ---------------------------------------------------------------------------
 # build_document_element

@@ -1,12 +1,12 @@
-"""Pipeline: parse all ADIT HTML bulletins and produce corpus.xml."""
+"""TD1 — Pipeline: parse all ADIT HTML bulletins and produce corpus.xml."""
 
 import logging
 import os
 from collections import defaultdict
 from pathlib import Path
 
-from .parser import parse_article
-from .xml_builder import CorpusBuilder
+from ..io.parser import parse_article
+from ..io.xml_builder import CorpusBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def _field_present(article: object, field: str) -> bool:
 
 def run(
     bulletins_dir: Path = Path("data/BULLETINS"),
-    output_path: Path = Path("outputs/corpus.xml"),
+    output_path: Path = Path("outputs/td1/corpus.xml"),
 ) -> None:
     """Parse all .htm files in *bulletins_dir* and write corpus.xml to *output_path*."""
     htm_files = sorted(bulletins_dir.glob("*.htm"))
@@ -88,8 +88,13 @@ def run(
     logger.info(sep)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Entry point for the ``td1`` console script."""
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s %(name)s: %(message)s"
     )
     run()
+
+
+if __name__ == "__main__":
+    main()

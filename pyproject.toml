@@ -8,7 +8,22 @@ version = "0.1.0"
 description = "LO17 - ADIT corpus preparation: parse HTML bulletins and build an indexable XML file."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["beautifulsoup4>=4.14.3", "lxml>=6.0.2"]
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "fr-core-news-sm",
+    "jupyter>=1.1.1",
+    "lxml>=6.0.2",
+    "matplotlib>=3.10.8",
+    "nltk>=3.9.4",
+    "snowball>=0.5.6",
+    "spacy>=3.8.11",
+]
+
+[project.scripts]
+td1 = "adit_corpus_indexing.pipelines.td1_pipeline:main"
+td2 = "adit_corpus_indexing.pipelines.td2_pipeline:main"
+td3 = "adit_corpus_indexing.pipelines.td3_pipeline:main"
+adit-pipeline = "adit_corpus_indexing.pipelines.full_pipeline:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -24,7 +39,7 @@ target-version = "py312"
 select = ["E", "F", "I", "N", "W", "B", "UP"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["adit_corpus_indexing"]
+known-first-party = ["adit_corpus_indexing", "backup"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -39,15 +54,24 @@ mypy_path = "src"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=adit_corpus_indexing --cov-report=term-missing"
+addopts = "--cov=adit_corpus_indexing --cov-report=term-missing --ignore=tests/test_td2_skeleton.py"
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["*/pipeline.py"]
+omit = [
+    "*/pipelines/td1_pipeline.py",
+    "*/pipelines/td2_pipeline.py",
+    "*/pipelines/td3_pipeline.py",
+    "*/pipelines/full_pipeline.py",
+    "*/indexing/create_inverse_file.py",
+]
 
 [tool.coverage.report]
 fail_under = 80
 show_missing = true
+
+[tool.uv.sources]
+fr-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl" }
 
 [dependency-groups]
 dev = [
