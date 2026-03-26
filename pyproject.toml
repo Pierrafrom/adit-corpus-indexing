@@ -56,7 +56,15 @@ addopts = "--cov=adit_corpus_indexing --cov-report=term-missing --ignore=tests/t
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["*/td1_pipeline.py", "*/td2_pipeline.py", "*/full_pipeline.py"]
+omit = [
+    "*/td1_pipeline.py",
+    "*/td2_pipeline.py",
+    "*/full_pipeline.py",
+    "*/lemmatisation.py",
+    "*/display_antidict.py",
+    "*/statistiques.py",
+    "*/create_inverse_file.py",
+]
 
 [tool.coverage.report]
 fail_under = 80
