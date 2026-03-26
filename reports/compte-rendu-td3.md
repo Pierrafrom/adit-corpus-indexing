@@ -519,7 +519,7 @@ Le corpus XML est parsé **une seule fois** au constructeur — toutes les méth
 ## 4. Correspondance questions / fichiers de sortie
 
 | Consigne TD3 | Fichier produit | Fonction / méthode |
-|---|---|---|
+| --- | --- | --- |
 | §1 — SpaCy lemmatisation | `outputs/lemmes_spacy.tsv` | `SpacyLemmatizer.extract_from_corpus()` |
 | §1 — Snowball racinisation | `outputs/lemmes_snowball.tsv` | `SnowballLemmatizer.extract_from_corpus()` |
 | §1 — Comparaison + sélection | *(rapport stdout)* | `LemmatizationComparator.print_report()` |
