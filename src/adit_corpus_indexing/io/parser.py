@@ -7,7 +7,7 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup, Tag
 
-from .models import Article, Contact, Image, Person
+from ..models import Article, Contact, Image, Person
 
 logger = logging.getLogger(__name__)
 

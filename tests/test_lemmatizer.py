@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from adit_corpus_indexing.lemmatizer import (
+from adit_corpus_indexing.nlp.lemmatizer import (
     LemmatizationComparator,
     SnowballLemmatizer,
     SpacyLemmatizer,

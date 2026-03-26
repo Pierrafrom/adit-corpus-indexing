@@ -25,20 +25,20 @@ def run(
         bulletins_dir: directory containing the raw ADIT ``.htm`` files.
         output_dir:    directory where all generated files are written.
     """
-    corpus_path = output_dir / "corpus.xml"
-    filtered_path = output_dir / "corpus_filtered.xml"
+    corpus_path = output_dir / "td1/corpus.xml"
+    filtered_path = output_dir / "td2/corpus_filtered.xml"
 
     logger.info("=== TD1 — HTML parsing ===")
     run_td1(bulletins_dir=bulletins_dir, output_path=corpus_path)
 
     logger.info("=== TD2 — TF-IDF & anti-dictionary ===")
-    run_td2(corpus_path=corpus_path, output_dir=output_dir)
+    run_td2(corpus_path=corpus_path, output_dir=output_dir / "td2")
 
     logger.info("=== TD3 — Lemmatisation & indexation ===")
-    run_td3(filtered_corpus_path=filtered_path, output_dir=output_dir)
+    run_td3(filtered_corpus_path=filtered_path, output_dir=output_dir / "td3")
 
-    final = output_dir / "corpus_final.xml"
-    indexes = output_dir / "indexes"
+    final = output_dir / "td3/corpus_final.xml"
+    indexes = output_dir / "td3/indexes"
     logger.info(
         "Full pipeline complete — final corpus: %s, indexes: %s", final, indexes
     )

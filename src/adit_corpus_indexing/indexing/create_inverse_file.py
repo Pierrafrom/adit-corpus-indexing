@@ -38,7 +38,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from .tokenizer import tokenize as _tokenize
+from ..nlp.tokenizer import tokenize as _tokenize
 
 logger = logging.getLogger(__name__)
 

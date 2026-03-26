@@ -35,16 +35,16 @@ The final deliverable is ``corpus_final.xml`` and the ``indexes/`` directory.
 import logging
 from pathlib import Path
 
-from .antidictionary import build_antidictionary
-from .create_inverse_file import InvertedIndexBuilder
-from .lemmatizer import (
+from ..nlp.antidictionary import build_antidictionary
+from ..indexing.create_inverse_file import InvertedIndexBuilder
+from ..nlp.lemmatizer import (
     LemmatizationComparator,
     SnowballLemmatizer,
     SpacyLemmatizer,
     apply_lemmatization_to_corpus,
     lemmatize_corpus_tokens,
 )
-from .tfidf import compute_idf, compute_tf, compute_tfidf
+from ..indexing.tfidf import compute_idf, compute_tf, compute_tfidf
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +71,8 @@ LEMMA_MAX_IDF_THRESHOLD: float = float("inf")
 
 
 def run(
-    filtered_corpus_path: Path = Path("outputs/corpus_filtered.xml"),
-    output_dir: Path = Path("outputs"),
+    filtered_corpus_path: Path = Path("outputs/td2/corpus_filtered.xml"),
+    output_dir: Path = Path("outputs/td3"),
 ) -> None:
     """Run the complete TD3 pipeline.
 

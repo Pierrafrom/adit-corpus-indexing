@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from adit_corpus_indexing.tfidf import compute_idf, compute_tf, compute_tfidf
+from adit_corpus_indexing.indexing.tfidf import compute_idf, compute_tf, compute_tfidf
 
 
 def _write_tokens(path: Path, rows: list[tuple[str, str]]) -> None:
@@ -230,7 +230,7 @@ class TestComputeTFIDF:
 
     def test_pipeline_integration(self, mini_corpus_path: Path, tmp_path: Path) -> None:
         """Full pipeline: segmente → tf → idf → tfidf."""
-        from adit_corpus_indexing.tokenizer import segmente
+        from adit_corpus_indexing.nlp.tokenizer import segmente
 
         tokens_path = tmp_path / "tokens.tsv"
         tf_path = tmp_path / "tf.tsv"

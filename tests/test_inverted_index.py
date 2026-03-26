@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from adit_corpus_indexing.create_inverse_file import InvertedIndexBuilder
+from adit_corpus_indexing.indexing.create_inverse_file import InvertedIndexBuilder
 
 # ---------------------------------------------------------------------------
 # Fixtures

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup, Tag
 
-from adit_corpus_indexing.parser import (
+from adit_corpus_indexing.io.parser import (
     _email_from_tag,
     _name_from_tag,
     _phone_from_text,

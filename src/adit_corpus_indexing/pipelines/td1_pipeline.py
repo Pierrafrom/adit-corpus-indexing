@@ -5,8 +5,8 @@ import os
 from collections import defaultdict
 from pathlib import Path
 
-from .parser import parse_article
-from .xml_builder import CorpusBuilder
+from ..io.parser import parse_article
+from ..io.xml_builder import CorpusBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def _field_present(article: object, field: str) -> bool:
 
 def run(
     bulletins_dir: Path = Path("data/BULLETINS"),
-    output_path: Path = Path("outputs/corpus.xml"),
+    output_path: Path = Path("outputs/td1/corpus.xml"),
 ) -> None:
     """Parse all .htm files in *bulletins_dir* and write corpus.xml to *output_path*."""
     htm_files = sorted(bulletins_dir.glob("*.htm"))

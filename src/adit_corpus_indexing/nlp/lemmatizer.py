@@ -52,7 +52,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from .models import LemmatizationEntry, LemmatizationStats
+from ..models import LemmatizationEntry, LemmatizationStats
 from .tokenizer import tokenize as _tokenize
 
 logger = logging.getLogger(__name__)

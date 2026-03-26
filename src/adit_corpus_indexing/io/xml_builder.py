@@ -5,7 +5,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from .models import Article
+from ..models import Article
 
 logger = logging.getLogger(__name__)
 

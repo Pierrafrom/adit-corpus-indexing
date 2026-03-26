@@ -20,10 +20,10 @@ dependencies = [
 ]
 
 [project.scripts]
-td1 = "adit_corpus_indexing.td1_pipeline:main"
-td2 = "adit_corpus_indexing.td2_pipeline:main"
-td3 = "adit_corpus_indexing.td3_pipeline:main"
-adit-pipeline = "adit_corpus_indexing.full_pipeline:main"
+td1 = "adit_corpus_indexing.pipelines.td1_pipeline:main"
+td2 = "adit_corpus_indexing.pipelines.td2_pipeline:main"
+td3 = "adit_corpus_indexing.pipelines.td3_pipeline:main"
+adit-pipeline = "adit_corpus_indexing.pipelines.full_pipeline:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -59,14 +59,11 @@ addopts = "--cov=adit_corpus_indexing --cov-report=term-missing --ignore=tests/t
 [tool.coverage.run]
 source = ["src"]
 omit = [
-    "*/td1_pipeline.py",
-    "*/td2_pipeline.py",
-    "*/td3_pipeline.py",
-    "*/full_pipeline.py",
-    "*/lemmatisation.py",
-    "*/display_antidict.py",
-    "*/statistiques.py",
-    "*/create_inverse_file.py",
+    "*/pipelines/td1_pipeline.py",
+    "*/pipelines/td2_pipeline.py",
+    "*/pipelines/td3_pipeline.py",
+    "*/pipelines/full_pipeline.py",
+    "*/indexing/create_inverse_file.py",
 ]
 
 [tool.coverage.report]

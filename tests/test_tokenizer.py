@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from lxml import etree
 
-from adit_corpus_indexing.tokenizer import (
+from adit_corpus_indexing.nlp.tokenizer import (
     get_text_fields,
     load_corpus,
     normalize_elisions,

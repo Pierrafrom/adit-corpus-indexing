@@ -3,9 +3,9 @@
 import logging
 from pathlib import Path
 
-from .antidictionary import apply_to_corpus, build_antidictionary
-from .tfidf import compute_idf, compute_tf, compute_tfidf
-from .tokenizer import segmente
+from ..nlp.antidictionary import apply_to_corpus, build_antidictionary
+from ..indexing.tfidf import compute_idf, compute_tf, compute_tfidf
+from ..nlp.tokenizer import segmente
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,8 @@ MAX_IDF_THRESHOLD = float("inf")
 
 
 def run(
-    corpus_path: Path = Path("outputs/corpus.xml"),
-    output_dir: Path = Path("outputs"),
+    corpus_path: Path = Path("outputs/td1/corpus.xml"),
+    output_dir: Path = Path("outputs/td2"),
 ) -> None:
     """Run the full TD2 pipeline.
 
