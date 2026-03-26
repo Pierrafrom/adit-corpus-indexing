@@ -5,7 +5,9 @@ from pathlib import Path
 import spacy
 from nltk.stem.snowball import SnowballStemmer  # type: ignore[import-untyped]
 
-from adit_corpus_indexing.models import LemmatizedToken
+from adit_corpus_indexing.models import (
+    LemmatizedToken,  # noqa: F401  (kept for script use)
+)
 
 
 def lemmatiser(corpus_path: Path, output_path: Path) -> None:

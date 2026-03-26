@@ -1,416 +1,301 @@
-"""TD3 : Création des fichiers inverses.
+"""TD3 — Inverted index construction.
 
-À partir du corpus XML lemmatisé et filtré, crée des fichiers inverses pour
-chaque balise importante (titre, texte, rubrique, date, bulletin).
+An *inverted index* maps each term (lemma, date, rubrique, …) to the list of
+documents in which it appears, along with the frequency of occurrence.
 
-Format de sortie :
-    terme \\t article_id:fréquence \\t bulletin_id:fréquence \\t ...
+This module exposes :class:`InvertedIndexBuilder`, an object that parses the
+lemmatized corpus once at construction and then offers four specialised
+build methods:
+
+- :meth:`~InvertedIndexBuilder.build_text_index` — term-frequency index for
+  free-text fields (``titre``, ``texte``).
+- :meth:`~InvertedIndexBuilder.build_combined_index` — weighted combination of
+  multiple text fields.
+- :meth:`~InvertedIndexBuilder.build_facet_index` — facet index for categorical
+  fields (``rubrique``, ``auteur``, ``bulletin``).
+- :meth:`~InvertedIndexBuilder.build_date_index` — facet index for dates,
+  grouped by ``mm/yyyy``.
+
+Output format
+-------------
+Text / combined indexes (one line per term)::
+
+    term<TAB>article_id:freq article_id:freq …
+
+Facet / date indexes (one line per facet value)::
+
+    value<TAB>article_id article_id …
+
+All files are UTF-8 encoded, tab-separated, no header line.
 """
+
+from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from collections.abc import Iterator
 from pathlib import Path
 
 from lxml import etree
 
+from .tokenizer import tokenize as _tokenize
+
 logger = logging.getLogger(__name__)
 
 
-def tokenize_field(text: str | None) -> list[str]:
-    """
-    Tokenize un champ texte en tokens simples (séparés par espaces).
+class InvertedIndexBuilder:
+    """Build inverted-index files from a lemmatized corpus XML.
 
-    Ignore les lignes vides et les tokens vides.
-
-    Args:
-        text: texte à tokenizer
-
-    Returns:
-        Liste de tokens (tokens vides supprimés)
-    """
-    if not text:
-        return []
-
-    # Diviser par espaces et filtrer les tokens vides
-    tokens = [t.lower().strip() for t in text.split()]
-    return [t for t in tokens if t]
-
-
-def build_inverse_index_per_field(
-    corpus_path: Path,
-    field_name: str,
-    output_path: Path,
-) -> None:
-    """
-    Crée un fichier inverse pour un champ donné (titre, texte, rubrique, date...).
-
-    Format de sortie (TSV, sans en-tête) :
-        terme \\t article_id:fréquence \\t article_id:fréquence \\t ...
+    The corpus is parsed once at construction; all build methods reuse the
+    same in-memory element tree.
 
     Args:
-        corpus_path: chemin vers le corpus XML filtré
-        field_name: nom de la balise à indexer ('titre', 'texte', 'rubrique', 'date')
-        output_path: chemin du fichier inverse
+        corpus_path: path to the final lemmatized corpus XML
+                     (``corpus_final.xml`` produced by the TD3 pipeline).
+
+    Example::
+
+        builder = InvertedIndexBuilder(Path("outputs/corpus_final.xml"))
+        builder.build_text_index("titre", Path("outputs/indexes/index_titre.tsv"))
+        builder.build_combined_index(
+            ["titre", "texte"],
+            Path("outputs/indexes/index_titre_texte.tsv"),
+            weights={"titre": 2.0, "texte": 1.0},
+        )
+        builder.build_facet_index(
+            "rubrique", Path("outputs/indexes/index_rubrique.tsv")
+        )
+        builder.build_date_index(Path("outputs/indexes/index_date.tsv"))
     """
-    # Dictionnaire : terme -> {article_id: fréquence}
-    index: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
-    # Parser le corpus XML
-    tree = etree.parse(str(corpus_path))
-    root = tree.getroot()
+    def __init__(self, corpus_path: Path) -> None:
+        tree = etree.parse(str(corpus_path))
+        self._root = tree.getroot()
+        self._documents = self._root.findall("document")
+        logger.info(
+            "InvertedIndexBuilder: loaded %d documents from %s",
+            len(self._documents),
+            corpus_path,
+        )
 
-    nb_docs = 0
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
 
-    # Itérer sur tous les documents
-    for doc_elem in root.findall("document"):
-        nb_docs += 1
-
-        # Récupérer l'ID de l'article
-        article_elem = doc_elem.find("article")
-        if article_elem is None or not article_elem.text:
-            logger.warning("Document sans ID article")
-            continue
-        article_id = article_elem.text.strip()
-
-        # Récupérer le champ à indexer
-        field_elem = doc_elem.find(field_name)
-        if field_elem is None or not field_elem.text:
-            logger.debug("Champ '%s' absent pour article %s", field_name, article_id)
-            continue
-
-        field_text = field_elem.text.strip()
-
-        # Tokenizer et compter les occurrences
-        tokens = tokenize_field(field_text)
-        for token in tokens:
-            index[token][article_id] += 1
-
-    # Écrire le fichier inverse
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        for terme in sorted(index.keys()):
-            # Construire la ligne : terme \t article_id:freq \t article_id:freq ...
-            postings = " ".join(
-                f"{aid}:{freq}" for aid, freq in sorted(index[terme].items())
-            )
-            f.write(f"{terme}\t{postings}\n")
-
-    logger.info(
-        "build_inverse_index_per_field: %d termes, %d documents → %s",
-        len(index),
-        nb_docs,
-        output_path,
-    )
-    print(f"✓ Index inverse pour '{field_name}' → '{output_path}'")
-    print(f"  Documents traités : {nb_docs}")
-    print(f"  Termes uniques    : {len(index)}")
-
-
-def build_combined_inverse_index(
-    corpus_path: Path,
-    fields: list[str],
-    output_path: Path,
-    field_weights: dict[str, float] | None = None,
-) -> None:
-    """
-    Crée un fichier inverse combiné à partir de plusieurs champs.
-
-    Les fréquences de chaque champ peuvent être pondérées différemment
-    (par ex. titre + 2 * texte pour favoriser les occurrences en titre).
-
-    Format de sortie :
-        terme \\t article_id:score_combiné \\t article_id:score_combiné \\t ...
-
-    Args:
-        corpus_path: chemin vers le corpus XML filtré
-        fields: liste des balises à combiner
-        output_path: chemin du fichier inverse
-        field_weights: dict {field_name: poids} pour pondérer les champs
-                      Par défaut : poids=1.0 pour tous les champs
-    """
-    if field_weights is None:
-        field_weights = {f: 1.0 for f in fields}
-
-    # Dictionnaire : terme -> {article_id: score combiné}
-    index: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
-
-    # Parser le corpus XML
-    tree = etree.parse(str(corpus_path))
-    root = tree.getroot()
-
-    nb_docs = 0
-
-    # Itérer sur tous les documents
-    for doc_elem in root.findall("document"):
-        nb_docs += 1
-
-        # Récupérer l'ID de l'article
-        article_elem = doc_elem.find("article")
-        if article_elem is None or not article_elem.text:
-            logger.warning("Document sans ID article")
-            continue
-        article_id = article_elem.text.strip()
-
-        # Traiter chaque champ
-        for field_name in fields:
-            field_elem = doc_elem.find(field_name)
-            if field_elem is None or not field_elem.text:
+    def _iter_documents(self) -> Iterator[tuple[str, etree._Element]]:
+        """Yield ``(article_id, document_element)`` pairs, skipping invalid docs."""
+        for doc in self._documents:
+            article = doc.find("article")
+            if article is None or not article.text:
+                logger.warning(
+                    "InvertedIndexBuilder: document without article ID — skipped"
+                )
                 continue
+            yield article.text.strip(), doc
 
-            field_text = field_elem.text.strip()
-            weight = field_weights.get(field_name, 1.0)
+    @staticmethod
+    def _write_text_index(index: dict[str, dict[str, int]], path: Path) -> None:
+        """Write a term-frequency posting list to *path*."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            for term in sorted(index):
+                postings = " ".join(
+                    f"{aid}:{freq}" for aid, freq in sorted(index[term].items())
+                )
+                f.write(f"{term}\t{postings}\n")
 
-            # Tokenizer et accumuler les scores pondérés
-            tokens = tokenize_field(field_text)
-            for token in tokens:
-                index[token][article_id] += weight
+    @staticmethod
+    def _write_float_index(index: dict[str, dict[str, float]], path: Path) -> None:
+        """Write a weighted posting list to *path*."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            for term in sorted(index):
+                postings = " ".join(
+                    f"{aid}:{score:.2f}" for aid, score in sorted(index[term].items())
+                )
+                f.write(f"{term}\t{postings}\n")
 
-    # Écrire le fichier inverse
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    @staticmethod
+    def _write_facet_index(index: dict[str, list[str]], path: Path) -> None:
+        """Write a facet posting list to *path*."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            for key in sorted(index):
+                docs = " ".join(index[key])
+                f.write(f"{key}\t{docs}\n")
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        for terme in sorted(index.keys()):
-            # Construire la ligne avec les scores combinés
-            postings = " ".join(
-                f"{aid}:{score:.2f}" for aid, score in sorted(index[terme].items())
-            )
-            f.write(f"{terme}\t{postings}\n")
+    # ------------------------------------------------------------------
+    # Public build methods
+    # ------------------------------------------------------------------
 
-    logger.info(
-        "build_combined_inverse_index: %d termes, %d documents → %s",
-        len(index),
-        nb_docs,
-        output_path,
-    )
-    print(f"✓ Index inverse combiné → '{output_path}'")
-    print(f"  Documents traités : {nb_docs}")
-    print(f"  Termes uniques    : {len(index)}")
-    print(f"  Champs combinés   : {', '.join(fields)}")
-    print(f"  Poids appliqués   : {field_weights}")
+    def build_text_index(self, field: str, output_path: Path) -> int:
+        """Build a term-frequency inverted index for a text field.
 
+        Tokenizes the content of ``<field>`` in every document and counts
+        occurrences per ``article_id``.
 
-def build_date_index(
-    corpus_path: Path,
-    output_path: Path,
-) -> None:
-    """
-    Crée un fichier inverse pour les dates (par mois/année).
+        Output line format::
 
-    Format de sortie :
-        date (mm/yyyy) \\t article_id \\t article_id \\t ...
+            term<TAB>article_id:freq article_id:freq …
 
-    Args:
-        corpus_path: chemin vers le corpus XML filtré
-        output_path: chemin du fichier d'index des dates
-    """
-    from collections import defaultdict
+        Args:
+            field:       XML tag name (e.g. ``"titre"``, ``"texte"``).
+            output_path: path to write the index TSV.
 
-    # Dictionnaire : date -> liste d'article_id
-    index: dict[str, list[str]] = defaultdict(list)
+        Returns:
+            Number of distinct terms indexed.
+        """
+        index: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
-    # Parser le corpus XML
-    tree = etree.parse(str(corpus_path))
-    root = tree.getroot()
+        for article_id, doc in self._iter_documents():
+            el = doc.find(field)
+            if el is None or not el.text:
+                logger.debug(
+                    "build_text_index('%s'): field absent for article %s",
+                    field,
+                    article_id,
+                )
+                continue
+            for token in _tokenize(el.text):
+                index[token][article_id] += 1
 
-    for doc_elem in root.findall("document"):
-        # Récupérer l'ID de l'article
-        article_elem = doc_elem.find("article")
-        if article_elem is None or not article_elem.text:
-            continue
-        article_id = article_elem.text.strip()
+        self._write_text_index(index, output_path)
+        logger.info(
+            "build_text_index('%s'): %d terms, %d docs → %s",
+            field,
+            len(index),
+            len(self._documents),
+            output_path,
+        )
+        return len(index)
 
-        # Récupérer la date et extraire mm/yyyy
-        date_elem = doc_elem.find("date")
-        if date_elem is None or not date_elem.text:
-            continue
+    def build_combined_index(
+        self,
+        fields: list[str],
+        output_path: Path,
+        weights: dict[str, float] | None = None,
+    ) -> int:
+        """Build a weighted combined inverted index for multiple fields.
 
-        date_text = date_elem.text.strip()
-        # Format attendu : dd/mm/yyyy
-        try:
+        Each field's token counts are multiplied by its weight before
+        accumulation.  This allows boosting precise fields (e.g. ``titre``)
+        over broader ones (e.g. ``texte``).
+
+        Output line format::
+
+            term<TAB>article_id:score article_id:score …
+
+        Args:
+            fields:      list of XML tag names to combine.
+            output_path: path to write the index TSV.
+            weights:     ``{field: float}`` weight map.
+                         Defaults to 1.0 for every field.
+
+        Returns:
+            Number of distinct terms indexed.
+        """
+        _weights = weights if weights is not None else {f: 1.0 for f in fields}
+        index: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+
+        for article_id, doc in self._iter_documents():
+            for field in fields:
+                el = doc.find(field)
+                if el is None or not el.text:
+                    continue
+                w = _weights.get(field, 1.0)
+                for token in _tokenize(el.text):
+                    index[token][article_id] += w
+
+        self._write_float_index(index, output_path)
+        logger.info(
+            "build_combined_index(%s, weights=%s): %d terms → %s",
+            fields,
+            _weights,
+            len(index),
+            output_path,
+        )
+        return len(index)
+
+    def build_facet_index(self, field: str, output_path: Path) -> int:
+        """Build a facet index for a categorical field.
+
+        The entire field value is used as the facet key (lowercased and
+        stripped).  Suitable for fields like ``rubrique``, ``auteur``, and
+        ``bulletin``.
+
+        Output line format::
+
+            value<TAB>article_id article_id …
+
+        Args:
+            field:       XML tag name (e.g. ``"rubrique"``, ``"auteur"``).
+            output_path: path to write the index TSV.
+
+        Returns:
+            Number of distinct facet values.
+        """
+        index: dict[str, list[str]] = defaultdict(list)
+
+        for article_id, doc in self._iter_documents():
+            el = doc.find(field)
+            if el is None or not el.text:
+                logger.debug(
+                    "build_facet_index('%s'): field absent for article %s",
+                    field,
+                    article_id,
+                )
+                continue
+            key = el.text.strip().lower()
+            if key:
+                index[key].append(article_id)
+
+        self._write_facet_index(index, output_path)
+        logger.info(
+            "build_facet_index('%s'): %d distinct values → %s",
+            field,
+            len(index),
+            output_path,
+        )
+        return len(index)
+
+    def build_date_index(self, output_path: Path) -> int:
+        """Build a date facet index grouped by ``mm/yyyy``.
+
+        Parses ``<date>`` fields in ``dd/mm/yyyy`` format and indexes articles
+        under their ``mm/yyyy`` key.
+
+        Output line format::
+
+            mm/yyyy<TAB>article_id article_id …
+
+        Args:
+            output_path: path to write the index TSV.
+
+        Returns:
+            Number of distinct ``mm/yyyy`` periods.
+        """
+        index: dict[str, list[str]] = defaultdict(list)
+
+        for article_id, doc in self._iter_documents():
+            date_el = doc.find("date")
+            if date_el is None or not date_el.text:
+                continue
+            date_text = date_el.text.strip()
             parts = date_text.split("/")
             if len(parts) == 3:
-                mm_yyyy = f"{parts[1]}/{parts[2]}"  # mm/yyyy
+                mm_yyyy = f"{parts[1]}/{parts[2]}"
                 index[mm_yyyy].append(article_id)
-        except Exception as e:
-            logger.warning("Erreur parsing date '%s': %s", date_text, e)
+            else:
+                logger.warning(
+                    "build_date_index: malformed date '%s' for article %s — skipped",
+                    date_text,
+                    article_id,
+                )
 
-    # Écrire le fichier d'index
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        for date_key in sorted(index.keys()):
-            articles = " ".join(index[date_key])
-            f.write(f"{date_key}\t{articles}\n")
-
-    logger.info(
-        "build_date_index: %d périodes distinctes → %s",
-        len(index),
-        output_path,
-    )
-    print(f"✓ Index par date → '{output_path}'")
-    print(f"  Périodes uniques : {len(index)}")
-
-
-def build_rubrique_index(
-    corpus_path: Path,
-    output_path: Path,
-) -> None:
-    """
-    Crée un fichier inverse pour les rubriques.
-
-    Format de sortie :
-        rubrique \\t article_id \\t article_id \\t ...
-
-    Args:
-        corpus_path: chemin vers le corpus XML filtré
-        output_path: chemin du fichier d'index des rubriques
-    """
-    from collections import defaultdict
-
-    # Dictionnaire : rubrique -> liste d'article_id
-    index: dict[str, list[str]] = defaultdict(list)
-
-    # Parser le corpus XML
-    tree = etree.parse(str(corpus_path))
-    root = tree.getroot()
-
-    for doc_elem in root.findall("document"):
-        # Récupérer l'ID de l'article
-        article_elem = doc_elem.find("article")
-        if article_elem is None or not article_elem.text:
-            continue
-        article_id = article_elem.text.strip()
-
-        # Récupérer la rubrique
-        rubrique_elem = doc_elem.find("rubrique")
-        if rubrique_elem is None or not rubrique_elem.text:
-            continue
-
-        rubrique = rubrique_elem.text.strip().lower()
-        index[rubrique].append(article_id)
-
-    # Écrire le fichier d'index
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        for rubrique in sorted(index.keys()):
-            articles = " ".join(index[rubrique])
-            f.write(f"{rubrique}\t{articles}\n")
-
-    logger.info(
-        "build_rubrique_index: %d rubriques distinctes → %s",
-        len(index),
-        output_path,
-    )
-    print(f"✓ Index par rubrique → '{output_path}'")
-    print(f"  Rubriques uniques : {len(index)}")
-
-
-# ============================================================
-# POINT D'ENTRÉE
-# ============================================================
-
-if __name__ == "__main__":
-    # 1. Créer des fichiers inverses pour chaque champ important
-    print("\n" + "=" * 60)
-    print("CRÉATION DES FICHIERS INVERSES")
-    print("=" * 60 + "\n")
-
-    corpus_path = Path("outputs/corpus_final.xml")
-
-    # Index pour les titres
-    build_inverse_index_per_field(
-        corpus_path=corpus_path,
-        field_name="titre",
-        output_path=Path("outputs/index_titre.tsv"),
-    )
-    print()
-
-    # Index pour le texte complet
-    build_inverse_index_per_field(
-        corpus_path=corpus_path,
-        field_name="texte",
-        output_path=Path("outputs/index_texte.tsv"),
-    )
-    print()
-
-    # Index par rubriques (facettes)
-    build_rubrique_index(
-        corpus_path=corpus_path,
-        output_path=Path("outputs/index_rubrique.tsv"),
-    )
-    print()
-
-    # Index par dates (facettes)
-    build_date_index(
-        corpus_path=corpus_path,
-        output_path=Path("outputs/index_date.tsv"),
-    )
-    print()
-
-    # 2. Index combiné avec poids : titre × 2 + texte × 1
-    build_combined_inverse_index(
-        corpus_path=corpus_path,
-        fields=["titre", "texte"],
-        output_path=Path("outputs/index_combined.tsv"),
-        field_weights={"titre": 2.0, "texte": 1.0},
-    )
-    print()
-
-    # ============================================================
-    # ANALYSE ET RECOMMANDATIONS
-    # ============================================================
-
-    print("\n" + "=" * 60)
-    print("RECOMMANDATIONS POUR AMÉLIORER L'INDEXATION")
-    print("=" * 60)
-
-    recommendations = """
-2. AMÉLIORATION DE LA QUALITÉ DE L'INDEXATION
-
-➤ SÉLECTION DES CHAMPS À INDEXER :
-  • Titre : poids élevé (2-3×) — termes précis et explicites
-  • Texte complet : poids standard (1×) — contexte global
-  • Rubrique : index facettes — filtrage thématique
-  • Date : index facettes — filtrage temporel
-  • Auteur : index optionnel — recherche par personne
-
-➤ PONDÉRATION DES CHAMPS :
-  • Favoriser les occurrences en titre (plus discriminantes)
-  • Réduire le poids des répétitions en texte
-  • Utiliser TF-IDF pour normaliser par fréquence relative
-
-➤ NETTOYAGE TEXTUEL :
-  • ✓ Lemmatisation spaCy (effectuée en TD3 phase 1)
-  • ✓ Anti-dictionnaire v2 (stop words dépendant du contexte)
-  • Note : Possibilité de supprimer les termes très rares (hapaxes)
-  • Note : Normalisation des caractères accentués (déjà fait)
-
-➤ INDEXATION MULTI-CHAMPS :
-  • Considérer BM25 (Okapi) au lieu du TF-IDF simple
-  • Implémenter la recherche booléenne (AND, OR, NOT)
-  • Ajouter la recherche par plage (range queries) sur dates
-
-➤ ANALYSE LINGUISTIQUE :
-  • Regroupement entités nommées (noms de lieux, organisations)
-  • Extraction d'expressions composées (n-grams)
-  • Détection d'acronymes et expansion
-
-➤ ÉVALUATION ET FEEDBACK :
-  • Collecter les requêtes utilisateur et leurs résultats
-  • Ajuster manuellement les seuils de pertinence
-  • Re-entrainer l'anti-dictionnaire sur requêtes fréquentes
-  • Analyser les cas de faux négatifs/positifs
-
-➤ PERFORMANCES :
-  • Indexation incrémentale pour corpus en croissance
-  • Compression du fichier inverse (delta encoding, VByte)
-  • Cache des requêtes fréquentes
-
-➤ RAPPEL vs PRÉCISION :
-  • Diminuer le seuil IDF → plus de rappel (moins de filtrage)
-  • Augmenter le seuil IDF → plus de précision (plus de filtrage)
-  • Adapter selon le cas d'usage métier
-"""
-    print(recommendations)
+        self._write_facet_index(index, output_path)
+        logger.info(
+            "build_date_index: %d distinct periods → %s",
+            len(index),
+            output_path,
+        )
+        return len(index)
