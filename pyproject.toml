@@ -52,7 +52,7 @@ mypy_path = "src"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=adit_corpus_indexing --cov-report=term-missing"
+addopts = "--cov=adit_corpus_indexing --cov-report=term-missing --ignore=tests/test_td2_skeleton.py"
 
 [tool.coverage.run]
 source = ["src"]

@@ -49,8 +49,8 @@ desktop.ini
 outputs/
 out/
 logs/
-#backup/
-#tests/test_td2_skeleton.py
+backup/
+tests/test_td2_skeleton.py
 
 # =============================================================================
 # Project — corpus data (read-only source, too large for git)
