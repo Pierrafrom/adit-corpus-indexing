@@ -1,7 +1,6 @@
 """TD3 — Affinage de l'anti-dictionnaire sur les lemmes spaCy."""
 
 import logging
-import math
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -130,7 +129,6 @@ def plot_idf_distribution(idf_path: Path, output_path: Path) -> None:
     # ── Graphique 3 : zoom sur les faibles IDF ────────────────────────────────
     seuil_zoom = 2.0
     valeurs_zoom = [v for v in valeurs if v <= seuil_zoom]
-    tokens_zoom = [s[0] for s in scores if s[1] <= seuil_zoom]
 
     nb_bins_zoom = min(30, len(valeurs_zoom))
     if nb_bins_zoom > 1:
@@ -152,7 +150,7 @@ def plot_idf_distribution(idf_path: Path, output_path: Path) -> None:
     )
     axes[2].legend(fontsize=8)
 
-    print(f"\nRépartition par seuil :")
+    print("\nRépartition par seuil :")
     for seuil in [0.3, 0.5, 0.7, 1.0, 1.5, 2.0]:
         nb = sum(1 for v in valeurs if v <= seuil)
         print(f"  IDF ≤ {seuil} : {nb} tokens ({nb / n * 100:.1f}%)")
@@ -251,7 +249,11 @@ if __name__ == "__main__":
     )
 
     # 2. Recalculer TF, IDF, TF-IDF sur les lemmes
-    from adit_corpus_indexing.tfidf import compute_tf, compute_idf, compute_tfidf
+    from adit_corpus_indexing.tfidf import (
+        compute_idf,
+        compute_tf,
+        compute_tfidf,
+    )
 
     compute_tf(
         tokens_path=Path("outputs/lemmes_spacy.tsv"),

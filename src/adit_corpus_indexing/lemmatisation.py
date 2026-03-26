@@ -1,11 +1,9 @@
-"""
-lemmatisation.py
-Lemmatisation du corpus filtré avec spaCy et Snowball.
-"""
+"""Lemmatisation du corpus filtré avec spaCy et Snowball."""
+
+from pathlib import Path
 
 import spacy
-from nltk.stem.snowball import SnowballStemmer
-from pathlib import Path
+from nltk.stem.snowball import SnowballStemmer  # type: ignore[import-untyped]
 
 from adit_corpus_indexing.models import LemmatizedToken
 
@@ -37,27 +35,28 @@ def lemmatiser(corpus_path: Path, output_path: Path) -> None:
 
     for doc in documents:
 
-        def extraire(balise: str) -> str:
-            debut = doc.find(f"<{balise}>")
-            fin = doc.find(f"</{balise}>")
+        def extraire(balise: str, content: str) -> str:
+            """Extract text between opening and closing tags."""
+            debut = content.find(f"<{balise}>")
+            fin = content.find(f"</{balise}>")
             if debut == -1 or fin == -1:
                 return ""
-            return doc[debut + len(balise) + 2 : fin].strip()
+            return content[debut + len(balise) + 2 : fin].strip()
 
-        article_id = extraire("article")
-        titre = extraire("titre")
-        texte = extraire("texte")
+        article_id = extraire("article", doc)
+        titre = extraire("titre", doc)
+        texte = extraire("texte", doc)
         contenu_doc = titre + " " + texte
 
         # ===== spaCy : lemmatisation =====
         doc_spacy = nlp(contenu_doc)
 
-        for token in doc_spacy:
+        for spacy_token in doc_spacy:
             # On ignore la ponctuation et les espaces
-            if not token.is_alpha:
+            if not spacy_token.is_alpha:
                 continue
-            mot = token.text.lower()
-            lemme_spacy = token.lemma_.lower()
+            mot = spacy_token.text.lower()
+            lemme_spacy = spacy_token.lemma_.lower()
             stemme_snowball = stemmer.stem(mot)
             tokens.append(
                 LemmatizedToken(

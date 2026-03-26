@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-create_inverse_file.py — TD3 : Création des fichiers inverses.
+"""TD3 : Création des fichiers inverses.
 
 À partir du corpus XML lemmatisé et filtré, crée des fichiers inverses pour
 chaque balise importante (titre, texte, rubrique, date, bulletin).
@@ -10,8 +8,9 @@ Format de sortie :
 """
 
 import logging
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+
 from lxml import etree
 
 logger = logging.getLogger(__name__)

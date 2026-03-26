@@ -34,26 +34,28 @@ def compter_uniques(valeurs: list[str]) -> int:
 
 
 def calculer_distribution(valeurs: list[str]) -> dict[str, int]:
-    """Retourne un dictionnaire {valeur: nombre_occurrences} trié par fréquence décroissante."""
-    compteur = {}
+    """Retourne un dictionnaire avec occurrences triées par fréquence décroissante."""
+    compteur: dict[str, int] = {}
     for v in valeurs:
         compteur[v] = compteur.get(v, 0) + 1
     return dict(sorted(compteur.items(), key=lambda x: x[1], reverse=True))
 
 
-def calculer_moyenne(valeurs: list[float]) -> float:
+def calculer_moyenne(valeurs: list[float | int]) -> float:
     """Calcule la moyenne d'une liste de nombres."""
     if not valeurs:
         return 0.0
-    return sum(valeurs) / len(valeurs)
+    return sum(valeurs, 0.0) / len(valeurs)
 
 
-def calculer_ecart_type(valeurs: list[float]) -> float:
+def calculer_ecart_type(valeurs: list[float | int]) -> float:
     """Calcule l'écart-type d'une liste de nombres."""
     if not valeurs:
         return 0.0
-    moyenne = calculer_moyenne(valeurs)
-    variance = sum((v - moyenne) ** 2 for v in valeurs) / len(valeurs)
+    moyenne_val = calculer_moyenne(valeurs)
+    variance: float = (
+        sum((v - moyenne_val) ** 2 for v in valeurs) / len(valeurs)
+    )
     return math.sqrt(variance)
 
 
@@ -101,7 +103,7 @@ def tokens_inchanges(tokens: list[str], formes: list[str]) -> tuple[int, float]:
     Returns:
         (nombre, pourcentage)
     """
-    inchanges = sum(1 for t, f in zip(tokens, formes) if t == f)
+    inchanges = sum(1 for t, f in zip(tokens, formes, strict=True) if t == f)
     pct = inchanges / len(tokens) * 100 if tokens else 0.0
     return inchanges, pct
 
@@ -116,13 +118,13 @@ def repartition_par_document(
     donnees: list[tuple[str, str, str, str]],
 ) -> dict[str, int]:
     """Retourne le nombre de tokens par document."""
-    compteur = {}
+    compteur: dict[str, int] = {}
     for article_id, _, _, _ in donnees:
         compteur[article_id] = compteur.get(article_id, 0) + 1
     return dict(sorted(compteur.items(), key=lambda x: x[1], reverse=True))
 
 
-def analyser(chemin_tsv: Path, chemin_rapport: Path) -> None:
+def analyser(chemin_tsv: Path, chemin_rapport: Path) -> None:  # noqa: PLR0915
     """
     Calcule toutes les statistiques comparatives et écrit un rapport TSV.
 
@@ -164,8 +166,8 @@ def analyser(chemin_tsv: Path, chemin_rapport: Path) -> None:
 
     docs = repartition_par_document(donnees)
 
-    longueurs_spacy = [len(s) for s in spacys]
-    longueurs_snow = [len(s) for s in snowballs]
+    longueurs_spacy = [float(len(s)) for s in spacys]
+    longueurs_snow = [float(len(s)) for s in snowballs]
 
     # ===== AFFICHAGE =====
 
@@ -175,7 +177,7 @@ def analyser(chemin_tsv: Path, chemin_rapport: Path) -> None:
         lignes_rapport.append("")
         lignes_rapport.append(f"=== {titre} ===")
 
-    def ligne(label: str, valeur) -> None:
+    def ligne(label: str, valeur: str | float | int) -> None:
         lignes_rapport.append(f"{label}\t{valeur}")
 
     section("CORPUS")
