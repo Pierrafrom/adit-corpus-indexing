@@ -222,7 +222,7 @@ def build_antidictionary_v2(
         for lemme in nouveaux:
             f.write(f"{lemme}\t\n")
 
-    print(f"✓ Anti-dictionnaire v2 → '{output_path}'")
+    print(f" Anti-dictionnaire v2 → '{output_path}'")
     print(f"  Stop words v1 (TD2)       : {len(antidico_v1)}")
     print(f"  Nouveaux stop words        : {len(nouveaux)}")
     print(f"  Total stop words           : {len(antidico_v1) + len(nouveaux)}")
@@ -280,7 +280,7 @@ if __name__ == "__main__":
         idf_path=Path("outputs/lemmes_idf.tsv"),
         antidico_v1_path=Path("outputs/antidictionary.tsv"),
         output_path=Path("outputs/antidictionary_v2.tsv"),
-        threshold=0.75,  # à ajuster selon le plot
+        threshold=1,  # à ajuster selon le plot
     )
 
     # 5. Filtrer le corpus XML avec l'anti-dictionnaire v2
@@ -291,4 +291,4 @@ if __name__ == "__main__":
         substitutions_path=Path("outputs/antidictionary_v2.tsv"),
         output_path=Path("outputs/corpus_final.xml"),
     )
-    print("✓ Corpus final généré → 'outputs/corpus_final.xml'")
+    print(" Corpus final généré → 'outputs/corpus_final.xml'")
