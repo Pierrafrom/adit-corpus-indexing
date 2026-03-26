@@ -53,9 +53,7 @@ def calculer_ecart_type(valeurs: list[float | int]) -> float:
     if not valeurs:
         return 0.0
     moyenne_val = calculer_moyenne(valeurs)
-    variance: float = (
-        sum((v - moyenne_val) ** 2 for v in valeurs) / len(valeurs)
-    )
+    variance: float = sum((v - moyenne_val) ** 2 for v in valeurs) / len(valeurs)
     return math.sqrt(variance)
 
 
