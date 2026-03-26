@@ -50,6 +50,7 @@ outputs/
 out/
 logs/
 backup/
+tests/
 
 # =============================================================================
 # Project — corpus data (read-only source, too large for git)
