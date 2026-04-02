@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import date
+from typing import Literal
 
 
 @dataclass
@@ -66,6 +67,37 @@ class LemmatizedToken:
     token: str
     lemma: str
     stem: str
+
+
+CorrectionStatus = Literal[
+    "entity",            # (a) number / date — kept as-is
+    "exact",             # (b) found verbatim in lexicon
+    "single_candidate",  # (d) one prefix candidate returned directly
+    "best_candidate",    # (e) Levenshtein picks best among multiple
+    "not_found",         # (f) no candidate found
+]
+
+
+@dataclass
+class CorrectionResult:
+    """Outcome of spell-checking one query term.
+
+    Attributes:
+        original:   the raw term from the query (after tokenization).
+        corrected:  the best matching lexicon word, or None if not found.
+        lemma:      the lemma for *corrected*, or None if not found.
+        status:     one of the five correction outcomes.
+        candidates: all candidates returned by prefix search (may be empty).
+        distance:   Levenshtein distance between *original* and *corrected*,
+                    or None when status is not ``"best_candidate"``.
+    """
+
+    original: str
+    corrected: str | None
+    lemma: str | None
+    status: CorrectionStatus
+    candidates: list[str] = field(default_factory=list)
+    distance: int | None = None
 
 
 @dataclass
