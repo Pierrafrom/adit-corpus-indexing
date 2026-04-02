@@ -272,11 +272,11 @@ class TestApplyToCorpus:
         self, mini_corpus_path: Path, tmp_path: Path
     ) -> None:
         """segmente → tf → idf → build_antidictionary → apply_to_corpus."""
+        from adit_corpus_indexing.indexing.tfidf import compute_idf, compute_tf
         from adit_corpus_indexing.nlp.antidictionary import (
             apply_to_corpus,
             build_antidictionary,
         )
-        from adit_corpus_indexing.indexing.tfidf import compute_idf, compute_tf
         from adit_corpus_indexing.nlp.tokenizer import segmente
 
         tokens = tmp_path / "tokens.tsv"

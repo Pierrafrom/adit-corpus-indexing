@@ -3,8 +3,8 @@
 import logging
 from pathlib import Path
 
-from ..nlp.antidictionary import apply_to_corpus, build_antidictionary
 from ..indexing.tfidf import compute_idf, compute_tf, compute_tfidf
+from ..nlp.antidictionary import apply_to_corpus, build_antidictionary
 from ..nlp.tokenizer import segmente
 
 logger = logging.getLogger(__name__)

@@ -35,8 +35,9 @@ The final deliverable is ``corpus_final.xml`` and the ``indexes/`` directory.
 import logging
 from pathlib import Path
 
-from ..nlp.antidictionary import build_antidictionary
 from ..indexing.create_inverse_file import InvertedIndexBuilder
+from ..indexing.tfidf import compute_idf, compute_tf, compute_tfidf
+from ..nlp.antidictionary import build_antidictionary
 from ..nlp.lemmatizer import (
     LemmatizationComparator,
     SnowballLemmatizer,
@@ -44,7 +45,6 @@ from ..nlp.lemmatizer import (
     apply_lemmatization_to_corpus,
     lemmatize_corpus_tokens,
 )
-from ..indexing.tfidf import compute_idf, compute_tf, compute_tfidf
 
 logger = logging.getLogger(__name__)
 

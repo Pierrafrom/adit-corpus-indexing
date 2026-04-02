@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from adit_corpus_indexing.models import LemmatizationEntry, LemmatizationStats
 from adit_corpus_indexing.nlp.lemmatizer import (
     LemmatizationComparator,
     SnowballLemmatizer,
@@ -23,7 +24,6 @@ from adit_corpus_indexing.nlp.lemmatizer import (
     apply_lemmatization_to_corpus,
     lemmatize_corpus_tokens,
 )
-from adit_corpus_indexing.models import LemmatizationEntry, LemmatizationStats
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
