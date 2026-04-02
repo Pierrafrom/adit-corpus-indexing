@@ -70,11 +70,11 @@ class LemmatizedToken:
 
 
 CorrectionStatus = Literal[
-    "entity",            # (a) number / date — kept as-is
-    "exact",             # (b) found verbatim in lexicon
+    "entity",  # (a) number / date — kept as-is
+    "exact",  # (b) found verbatim in lexicon
     "single_candidate",  # (d) one prefix candidate returned directly
-    "best_candidate",    # (e) Levenshtein picks best among multiple
-    "not_found",         # (f) no candidate found
+    "best_candidate",  # (e) Levenshtein picks best among multiple
+    "not_found",  # (f) no candidate found
 ]
 
 

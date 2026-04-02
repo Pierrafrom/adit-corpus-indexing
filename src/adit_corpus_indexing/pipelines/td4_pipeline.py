@@ -59,19 +59,19 @@ _MINI_LEXICON = (
 
 # Status symbols for compact display
 _STATUS_ICON: dict[str, str] = {
-    "entity":           "🔢",
-    "exact":            "✓",
+    "entity": "🔢",
+    "exact": "✓",
     "single_candidate": "→",
-    "best_candidate":   "~",
-    "not_found":        "✗",
+    "best_candidate": "~",
+    "not_found": "✗",
 }
 
 _STATUS_LABEL: dict[str, str] = {
-    "entity":           "entité conservée",
-    "exact":            "trouvé dans le lexique",
+    "entity": "entité conservée",
+    "exact": "trouvé dans le lexique",
     "single_candidate": "candidat unique (préfixe)",
-    "best_candidate":   "meilleur candidat (Levenshtein)",
-    "not_found":        "introuvable",
+    "best_candidate": "meilleur candidat (Levenshtein)",
+    "not_found": "introuvable",
 }
 
 
