@@ -108,7 +108,7 @@ def parse_body(soup: BeautifulSoup) -> str:
 # Extraction helpers (email / url / phone / name) for Person and Contact
 # ---------------------------------------------------------------------------
 
-_RE_EMAIL_LABEL = re.compile(r"\s*-?\s*email\s*:\s*\S+", re.IGNORECASE)
+_RE_EMAIL_LABEL = re.compile(r"\s*-?\s*emai[l]?\s*:\s*\S+", re.IGNORECASE)
 _RE_URL_INLINE = re.compile(r"\s*-?\s*https?://\S+", re.IGNORECASE)
 _RE_SITE_LABEL = re.compile(r"\s*-?\s*Site\s+Internet\s*:\s*\S+", re.IGNORECASE)
 _RE_PHONE_LABEL = re.compile(
@@ -201,7 +201,7 @@ def parse_author(soup: BeautifulSoup) -> Person | None:
     text = span.get_text(" ", strip=True)
     text = re.sub(r"^ADIT\s*-\s*", "", text, flags=re.IGNORECASE)
     email = _email_from_tag(span)
-    name = _RE_EMAIL_LABEL.sub("", text).strip(" -")
+    name = _RE_EMAIL_LABEL.sub("", text).strip(" -.")
     return Person(name=name, email=email)
 
 
