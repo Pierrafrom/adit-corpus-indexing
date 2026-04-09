@@ -23,11 +23,11 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _ANNEXE_QUERIES: list[str] = [
-    "Afficher la liste des articles qui parlent des systèmes embarqués dans la rubrique Horizons Enseignement.",
+    "Afficher la liste des articles qui parlent des systèmes embarqués dans la rubrique Horizons Enseignement.",  # noqa: E501
     "Je voudrais les articles qui parlent d'airbus ou du projet Taxibot.",
     "Je voudrais les articles qui parlent du tennis.",
     "Je voudrais les articles traitant de la Lune.",
-    "Quels sont les articles parus entre le 3 mars 2013 et le 4 mai 2013 évoquant les Etats-Unis ?",
+    "Quels sont les articles parus entre le 3 mars 2013 et le 4 mai 2013 évoquant les Etats-Unis ?",  # noqa: E501
     "Afficher les articles de la rubrique en direct des laboratoires.",
     "Je veux les articles de la rubrique Focus parlant d'innovation.",
     "Je cherche les recherches sur l'aéronotique.",
@@ -36,23 +36,23 @@ _ANNEXE_QUERIES: list[str] = [
     "Je voudrais les articles dont le titre contient le mot chimie.",
     "Je veux les articles de 2014 et de la rubrique Focus et parlant de la santé.",
     "Je souhaite les rubriques des articles parlant de nutrition ou de vins.",
-    "quels sont les articles publiés au mois de novembre 2011 portant sur de la recherche.",
-    "Je voudrais les articles avec des images dont le titre contient le mot croissance.",
-    "J'aimerais la liste des articles écrits après janvier 2014 et qui parlent d'informatique ou de télécommunications.",
+    "quels sont les articles publiés au mois de novembre 2011 portant sur de la recherche.",  # noqa: E501
+    "Je voudrais les articles avec des images dont le titre contient le mot croissance.",  # noqa: E501
+    "J'aimerais la liste des articles écrits après janvier 2014 et qui parlent d'informatique ou de télécommunications.",  # noqa: E501
     "Je veux les articles de 2012 qui parlent de l'écologie en France.",
-    "Liste des articles qui parlent soit du CNRS, soit des grandes écoles, mais pas de Centrale Paris.",
-    "J'aimerais un article qui parle de biologie et qui date d'après le 2 juillet 2012 ?",
+    "Liste des articles qui parlent soit du CNRS, soit des grandes écoles, mais pas de Centrale Paris.",  # noqa: E501
+    "J'aimerais un article qui parle de biologie et qui date d'après le 2 juillet 2012 ?",  # noqa: E501
     "je voudrais les articles dont le titre contient le mot europe.",
     "Je cherche les articles provenant de la rubrique en direct des laboratoires.",
-    "Je voudrais les articles qui datent du 1 décembre 2012 et dont la rubrique est Actualités Innovations.",
+    "Je voudrais les articles qui datent du 1 décembre 2012 et dont la rubrique est Actualités Innovations.",  # noqa: E501
     "Articles contenant une image.",
     "Je veux les articles sans image.",
     "quels articles portent à la fois sur les nanotechnologies et les microsatélites.",
     "Lister tous les articles dont la rubrique est Focus et qui ont des images.",
-    "Articles dont la rubrique est Horizon Enseignement mais qui ne parlent pas d'ingénieurs.",
-    "Tous les articles dont la rubrique est En direct des laboratoires ou Focus et qui évoquent la médecine.",
-    "Je voudrais tous les bulletins écrits entre 2012 et 2013 mais pas au mois de juin.",
-    "je veux les articles de la rubrique Focus et publiés entre 30/08/2011 et 29/09/2011.",
+    "Articles dont la rubrique est Horizon Enseignement mais qui ne parlent pas d'ingénieurs.",  # noqa: E501
+    "Tous les articles dont la rubrique est En direct des laboratoires ou Focus et qui évoquent la médecine.",  # noqa: E501
+    "Je voudrais tous les bulletins écrits entre 2012 et 2013 mais pas au mois de juin.",  # noqa: E501
+    "je veux les articles de la rubrique Focus et publiés entre 30/08/2011 et 29/09/2011.",  # noqa: E501
     "Listezmo les articles qui parlent de 3D et qui sont écrits entre 2010 et 2011.",
     "Chercher les articles dans le domaine industriel et datés à partir de 2012.",
     "Rechercher tous les articles sur le CNRS et l'innovation à partir de 2013.",

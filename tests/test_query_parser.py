@@ -6,8 +6,6 @@ spell_checker so they don't require the full lexicon / SpaCy model.
 
 from __future__ import annotations
 
-import pytest
-
 from adit_corpus_indexing.models import ParsedQuery
 from adit_corpus_indexing.nlp.query_parser import (
     QueryParser,
@@ -17,7 +15,6 @@ from adit_corpus_indexing.nlp.query_parser import (
     _extract_operators,
     _extract_rubrique,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -64,16 +61,12 @@ class TestExtractDates:
         assert "juin" not in residual
 
     def test_full_date_range(self) -> None:
-        dmin, dmax, _ = _extract_dates(
-            "parus entre le 3 mars 2013 et le 4 mai 2013"
-        )
+        dmin, dmax, _ = _extract_dates("parus entre le 3 mars 2013 et le 4 mai 2013")
         assert dmin == "2013-03-03"
         assert dmax == "2013-05-04"
 
     def test_slash_date_range(self) -> None:
-        dmin, dmax, _ = _extract_dates(
-            "publiés entre 30/08/2011 et 29/09/2011"
-        )
+        dmin, dmax, _ = _extract_dates("publiés entre 30/08/2011 et 29/09/2011")
         assert dmin == "2011-08-30"
         assert dmax == "2011-09-29"
 
@@ -140,21 +133,15 @@ class TestExtractRubrique:
         assert rub == "Focus"
 
     def test_horizons_enseignement(self) -> None:
-        rub, _ = _extract_rubrique(
-            "rubrique Horizons Enseignement"
-        )
+        rub, _ = _extract_rubrique("rubrique Horizons Enseignement")
         assert rub == "Horizons Enseignement"
 
     def test_en_direct_des_laboratoires(self) -> None:
-        rub, _ = _extract_rubrique(
-            "la rubrique en direct des laboratoires"
-        )
+        rub, _ = _extract_rubrique("la rubrique en direct des laboratoires")
         assert rub == "En direct des laboratoires"
 
     def test_actualites_innovations(self) -> None:
-        rub, _ = _extract_rubrique(
-            "dont la rubrique est Actualités Innovations"
-        )
+        rub, _ = _extract_rubrique("dont la rubrique est Actualités Innovations")
         assert rub == "Actualités Innovations"
 
     def test_evenement(self) -> None:
@@ -203,9 +190,7 @@ class TestExtractFilters:
         assert fi is None
 
     def test_zone_titre(self) -> None:
-        fi, zone, residual = _extract_filters(
-            "dont le titre contient le mot chimie"
-        )
+        fi, zone, residual = _extract_filters("dont le titre contient le mot chimie")
         assert zone == "titre"
         assert "chimie" in residual
 
@@ -249,9 +234,7 @@ class TestExtractOperators:
         assert "NOT" in ops
 
     def test_or_and_not(self) -> None:
-        ops, _ = _extract_operators(
-            "CNRS ou grandes écoles mais pas Centrale"
-        )
+        ops, _ = _extract_operators("CNRS ou grandes écoles mais pas Centrale")
         assert "AND" in ops
         assert "OR" in ops
         assert "NOT" in ops
@@ -310,18 +293,23 @@ class TestQueryParserFull:
             " dans la rubrique Horizons Enseignement."
         )
         assert pq.rubrique == "Horizons Enseignement"
-        assert "embarqués" in pq.mots_cles or "embarque" in pq.mots_cles or any(
-            "embarqu" in kw for kw in pq.mots_cles
+        assert (
+            "embarqués" in pq.mots_cles
+            or "embarque" in pq.mots_cles
+            or any("embarqu" in kw for kw in pq.mots_cles)
         )
 
     def test_or_query(self) -> None:
-        pq = parse("Je voudrais les articles qui parlent d'airbus ou du projet Taxibot.")
+        pq = parse(
+            "Je voudrais les articles qui parlent d'airbus ou du projet Taxibot."
+        )
         assert "OR" in pq.operateurs
         assert "airbus" in pq.mots_cles
 
     def test_date_with_rubrique(self) -> None:
         pq = parse(
-            "Je veux les articles de 2014 et de la rubrique Focus et parlant de la santé."
+            "Je veux les articles de 2014 et de la rubrique Focus"
+            " et parlant de la santé."
         )
         assert pq.date_min == "2014-01-01"
         assert pq.date_max == "2014-12-31"
@@ -342,7 +330,8 @@ class TestQueryParserFull:
 
     def test_image_and_zone_titre(self) -> None:
         pq = parse(
-            "Je voudrais les articles avec des images dont le titre contient le mot croissance."
+            "Je voudrais les articles avec des images"
+            " dont le titre contient le mot croissance."
         )
         assert pq.filtre_images is True
         assert pq.zone == "titre"
@@ -365,7 +354,10 @@ class TestQueryParserFull:
         assert "NOT" in pq.operateurs
 
     def test_year_range_no_june(self) -> None:
-        pq = parse("Je voudrais tous les bulletins écrits entre 2012 et 2013 mais pas au mois de juin.")
+        pq = parse(
+            "Je voudrais tous les bulletins écrits entre 2012 et 2013"
+            " mais pas au mois de juin."
+        )
         assert pq.date_min == "2012-01-01"
         assert pq.date_max == "2013-12-31"
         assert "NOT" in pq.operateurs
@@ -373,7 +365,8 @@ class TestQueryParserFull:
 
     def test_after_date_query(self) -> None:
         pq = parse(
-            "J'aimerais un article qui parle de biologie et qui date d'après le 2 juillet 2012 ?"
+            "J'aimerais un article qui parle de biologie"
+            " et qui date d'après le 2 juillet 2012 ?"
         )
         assert pq.date_min == "2012-07-02"
         assert pq.date_max is None
@@ -381,7 +374,8 @@ class TestQueryParserFull:
 
     def test_month_year_query(self) -> None:
         pq = parse(
-            "quels sont les articles publiés au mois de novembre 2011 portant sur de la recherche."
+            "quels sont les articles publiés au mois de novembre 2011"
+            " portant sur de la recherche."
         )
         assert pq.date_min == "2011-11-01"
         assert pq.date_max == "2011-11-30"
@@ -410,12 +404,17 @@ class TestQueryParserFull:
         assert "AND" in pq.operateurs
 
     def test_from_year_query(self) -> None:
-        pq = parse("Chercher les articles dans le domaine industriel et datés à partir de 2012.")
+        pq = parse(
+            "Chercher les articles dans le domaine industriel"
+            " et datés à partir de 2012."
+        )
         assert pq.date_min == "2012-01-01"
         assert pq.date_max is None
 
     def test_focus_with_images(self) -> None:
-        pq = parse("Lister tous les articles dont la rubrique est Focus et qui ont des images.")
+        pq = parse(
+            "Lister tous les articles dont la rubrique est Focus et qui ont des images."
+        )
         assert pq.rubrique == "Focus"
         assert pq.filtre_images is True
 

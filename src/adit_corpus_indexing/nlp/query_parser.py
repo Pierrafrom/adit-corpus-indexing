@@ -1,6 +1,7 @@
 """TD5 — Natural language query parser for the ADIT corpus.
 
-Transforms a plain French query into a structured :class:`~adit_corpus_indexing.models.ParsedQuery`
+Transforms a plain French query into a structured
+:class:`~adit_corpus_indexing.models.ParsedQuery`
 that can be used to interrogate the inverted indexes built in TD3.
 
 The parsing pipeline applies five steps in order, each consuming and removing
@@ -635,9 +636,10 @@ def _extract_keywords(
 
     Args:
         text:          residual query text after all metadata extraction.
-        spell_checker: optional :class:`~adit_corpus_indexing.nlp.spell_checker.SpellChecker`
-                       instance.  When provided, each token is corrected and
-                       the corresponding lemma is returned.
+        spell_checker: optional
+            :class:`~adit_corpus_indexing.nlp.spell_checker.SpellChecker`
+            instance.  When provided, each token is corrected and the
+            corresponding lemma is returned.
 
     Returns:
         List of lowercase keyword strings (deduplicated, order preserved).
@@ -682,12 +684,14 @@ def _dedup(seq: list[str]) -> list[str]:
 
 
 class QueryParser:
-    """Parse a natural language French query into a :class:`~adit_corpus_indexing.models.ParsedQuery`.
+    """Parse a natural language French query into a structured
+    :class:`~adit_corpus_indexing.models.ParsedQuery`.
 
     Args:
-        spell_checker: optional :class:`~adit_corpus_indexing.nlp.spell_checker.SpellChecker`
-                       to correct and lemmatise keywords.  When *None*, keywords
-                       are returned as raw lowercase tokens.
+        spell_checker: optional
+            :class:`~adit_corpus_indexing.nlp.spell_checker.SpellChecker`
+            to correct and lemmatise keywords.  When *None*, keywords are
+            returned as raw lowercase tokens.
 
     Example::
 
@@ -701,7 +705,8 @@ class QueryParser:
         self._spell_checker = spell_checker
 
     def parse(self, query: str) -> ParsedQuery:
-        """Parse *query* and return a structured :class:`~adit_corpus_indexing.models.ParsedQuery`.
+        """Parse *query* and return a structured
+        :class:`~adit_corpus_indexing.models.ParsedQuery`.
 
         Args:
             query: raw natural language query typed by the user.
