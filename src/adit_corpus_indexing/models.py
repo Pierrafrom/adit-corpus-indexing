@@ -101,6 +101,34 @@ class CorrectionResult:
 
 
 @dataclass
+class ParsedQuery:
+    """Structured representation of a natural language query (TD5).
+
+    Produced by :class:`~adit_corpus_indexing.nlp.query_parser.QueryParser`.
+
+    Attributes:
+        mots_cles:     lemmatised keywords extracted from the query.
+        rubrique:      ADIT rubrique name if explicitly mentioned, else None.
+        date_min:      lower date bound (inclusive), as ISO string or None.
+        date_max:      upper date bound (inclusive), as ISO string or None.
+        operateurs:    logical operators detected (always contains "AND";
+                       may also contain "OR" and/or "NOT").
+        filtre_images: True → must have images; False → must have none;
+                       None → no constraint.
+        zone:          "titre" to restrict keyword search to the title field;
+                       None means search all zones.
+    """
+
+    mots_cles: list[str]
+    rubrique: str | None = None
+    date_min: str | None = None
+    date_max: str | None = None
+    operateurs: list[str] = field(default_factory=lambda: ["AND"])
+    filtre_images: bool | None = None
+    zone: str | None = None
+
+
+@dataclass
 class LemmatizationStats:
     """Descriptive statistics for one lemmatization run.
 
