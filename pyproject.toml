@@ -24,6 +24,7 @@ td1 = "adit_corpus_indexing.pipelines.td1_pipeline:main"
 td2 = "adit_corpus_indexing.pipelines.td2_pipeline:main"
 td3 = "adit_corpus_indexing.pipelines.td3_pipeline:main"
 td4 = "adit_corpus_indexing.pipelines.td4_pipeline:main"
+td5 = "adit_corpus_indexing.pipelines.td5_pipeline:main"
 adit-pipeline = "adit_corpus_indexing.pipelines.full_pipeline:main"
 
 [tool.setuptools.packages.find]
@@ -66,6 +67,7 @@ omit = [
     "*/pipelines/full_pipeline.py",
     "*/indexing/create_inverse_file.py",
     "*/pipelines/td4_pipeline.py",
+    "*/pipelines/td5_pipeline.py",
 ]
 
 [tool.coverage.report]
