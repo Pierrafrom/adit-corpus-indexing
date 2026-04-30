@@ -175,7 +175,7 @@ _RE_STANDALONE_MONTH = re.compile(
 
 _RUBRIQUES: list[tuple[str, list[str]]] = [
     ("En direct des laboratoires", ["en direct des laboratoires"]),
-    ("Horizons Enseignement", ["horizons enseignement"]),
+    ("Horizons Enseignement", ["horizons enseignement", "horizon enseignement"]),
     (
         "Actualités Innovations",
         [
@@ -240,7 +240,7 @@ _RE_ZONE_TITRE = re.compile(
 # ---------------------------------------------------------------------------
 
 _RE_NOT = re.compile(
-    r"\b(?:mais\s+pas|non\s+pas|et\s+non(?:\s+pas)?|sans)\b",
+    r"\b(?:mais\s+pas|non\s+pas|et\s+non(?:\s+pas)?|sans|ne\s+\w+(?:\s+\w+)?\s+pas)\b",
     re.IGNORECASE,
 )
 _RE_OR = re.compile(r"\bou\b", re.IGNORECASE)
@@ -349,7 +349,12 @@ _STOP_WORDS: frozenset[str] = frozenset(
         "termes",
         "sujet",
         "domaine",
-        # Topic verbs (infinitives and conjugated)
+        # Verb être (framing)
+        "est",
+        "sont",
+        # Negation particle
+        "ne",
+        # Topic verbs — infinitives, conjugated, and accented participials
         "parler",
         "parlent",
         "parle",
@@ -370,6 +375,10 @@ _STOP_WORDS: frozenset[str] = frozenset(
         "evoquent",
         "evoque",
         "evoquant",
+        "évoquer",
+        "évoquent",
+        "évoque",
+        "évoquant",
         "mentionner",
         "mentionnent",
         "mentionne",
@@ -382,13 +391,30 @@ _STOP_WORDS: frozenset[str] = frozenset(
         "lier",
         "datent",
         "dater",
-        # Participials (unaccented forms after tokenisation)
+        "cherche",
+        "cherches",
+        # Query framing noun (plural)
+        "rubrique",
+        "rubriques",
+        # Participials — unaccented and accented forms
         "publie",
         "publies",
+        "publié",
+        "publiés",
+        "publiée",
+        "publiées",
         "ecrit",
         "ecrits",
+        "écrit",
+        "écrits",
+        "écrite",
+        "écrites",
         "date",
         "dates",
+        "daté",
+        "datés",
+        "datée",
+        "datées",
         "paru",
         "parus",
         # Miscellaneous
@@ -396,6 +422,7 @@ _STOP_WORDS: frozenset[str] = frozenset(
         "tout",
         "toutes",
         "toute",
+        "fois",
         "soit",
         "soient",
         "donc",
@@ -410,6 +437,8 @@ _STOP_WORDS: frozenset[str] = frozenset(
         "lesquels",
         "lesquelles",
         "alors",
+        "listez",
+        "listezmo",
         # Single letters left over from elision removal
         "s",
         "t",

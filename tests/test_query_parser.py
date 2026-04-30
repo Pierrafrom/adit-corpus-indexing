@@ -247,6 +247,18 @@ class TestExtractOperators:
         _, residual = _extract_operators("robots mais pas drones")
         assert "mais pas" not in residual.lower()
 
+    def test_not_ne_pas(self) -> None:
+        ops, _ = _extract_operators("qui ne parlent pas d'ingénieurs")
+        assert "NOT" in ops
+
+    def test_not_ne_verb_pas_full_query(self) -> None:
+        pq = parse(
+            "Articles dont la rubrique est Horizon Enseignement"
+            " mais qui ne parlent pas d'ingénieurs."
+        )
+        assert "NOT" in pq.operateurs
+        assert pq.rubrique == "Horizons Enseignement"
+
 
 # ---------------------------------------------------------------------------
 # Step 5 — Keyword extraction
