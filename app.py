@@ -25,11 +25,11 @@ from src.adit_corpus_indexing.search.evaluator import Evaluator
 _OUTPUTS = Path("outputs/td3")
 _INDEXES = _OUTPUTS / "indexes"
 _CORPUS = _OUTPUTS / "corpus_final.xml"
-_DISPLAY_CORPUS = _OUTPUTS / "corpus_filtered.xml"
 _LEXICON = _OUTPUTS / "lemmes_snowball.tsv"
 _GROUND_TRUTH = Path("data/ground_truth.json")
 
-# Static-served HTML articles (Streamlit enableStaticServing + COPY data/BULLETINS/ static/)
+# HTML articles served via Streamlit static serving when static/ dir is present
+# (locally: cp data/BULLETINS/ static/ ; in Docker: handled by Dockerfile COPY)
 _STATIC_ARTICLES = Path("static")
 
 # ---------------------------------------------------------------------------
@@ -55,7 +55,6 @@ def _get_engine() -> SearchEngine:
         indexes_dir=_INDEXES,
         corpus_path=_CORPUS,
         lexicon_path=_LEXICON,
-        display_corpus_path=_DISPLAY_CORPUS if _DISPLAY_CORPUS.exists() else None,
     )
 
 

@@ -123,11 +123,8 @@ class SearchEngine:
         indexes_dir: Path,
         corpus_path: Path,
         lexicon_path: Path | None = None,
-        display_corpus_path: Path | None = None,
     ) -> None:
-        self._corpus = CorpusReader(
-            corpus_path, display_corpus_path=display_corpus_path
-        )
+        self._corpus = CorpusReader(corpus_path)
 
         # Load indexes
         self._main_index = load_text_index(indexes_dir / "index_titre_texte.tsv")
@@ -331,37 +328,30 @@ class SearchEngine:
     # ------------------------------------------------------------------
 
     def _extract_snippet(self, meta: DocumentMeta, keywords: list[str]) -> str:
-        """Return a ~200-char context window around the first keyword hit.
-
-        Display text is the original (non-lemmatised) body when available.
-        Keyword position is searched in the display text; many Snowball stems
-        are substrings of the original French words (e.g. "robot" in "robots").
-        """
-        display = meta.original_texte or meta.texte
-        if not display:
+        """Return a ~200-char context window around the first keyword hit."""
+        text = meta.texte
+        if not text:
             return meta.titre[:_SNIPPET_WINDOW]
 
-        display_lower = display.lower()
-        best_pos = len(display)
+        text_lower = text.lower()
+        best_pos = len(text)
         for kw in keywords:
-            pos = display_lower.find(kw)
+            pos = text_lower.find(kw)
             if 0 <= pos < best_pos:
                 best_pos = pos
 
-        if best_pos == len(display):
+        if best_pos == len(text):
             return (
-                (display[:_SNIPPET_WINDOW] + "…")
-                if len(display) > _SNIPPET_WINDOW
-                else display
+                (text[:_SNIPPET_WINDOW] + "…") if len(text) > _SNIPPET_WINDOW else text
             )
 
         half = _SNIPPET_WINDOW // 2
         start = max(0, best_pos - half)
-        end = min(len(display), start + _SNIPPET_WINDOW)
-        snippet = display[start:end]
+        end = min(len(text), start + _SNIPPET_WINDOW)
+        snippet = text[start:end]
         if start > 0:
             snippet = "…" + snippet
-        if end < len(display):
+        if end < len(text):
             snippet = snippet + "…"
         return snippet
 
