@@ -1,0 +1,103 @@
+\documentclass[12pt,a4paper]{report}
+
+% ── Encodage et langue ─────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+
+% ── Mise en page ───────────────────────────────────────────────────────────────
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% ── Graphiques et tableaux ─────────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes.geometric, positioning, fit, backgrounds}
+
+% ── Code source ────────────────────────────────────────────────────────────────
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegray}{rgb}{0.95,0.95,0.95}
+\definecolor{codeblue}{rgb}{0.0,0.35,0.65}
+\definecolor{codecomment}{rgb}{0.40,0.40,0.40}
+\definecolor{codestring}{rgb}{0.2,0.55,0.2}
+
+\lstdefinestyle{python}{
+  language=Python,
+  backgroundcolor=\color{codegray},
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{codeblue}\bfseries,
+  stringstyle=\color{codestring},
+  commentstyle=\color{codecomment}\itshape,
+  breaklines=true,
+  showstringspaces=false,
+  frame=single,
+  framerule=0.4pt,
+  numbers=left,
+  numberstyle=\tiny\color{codecomment},
+  xleftmargin=1.5em,
+  aboveskip=6pt,
+  belowskip=6pt,
+}
+\lstset{style=python}
+
+% ── Mathématiques ──────────────────────────────────────────────────────────────
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ── Hyperliens ─────────────────────────────────────────────────────────────────
+\usepackage[colorlinks=true, linkcolor=codeblue, urlcolor=codeblue,
+            citecolor=codeblue]{hyperref}
+
+% ── En-têtes ───────────────────────────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small LO17 — Indexation et Recherche d'Information}
+\lhead{\small UTC, Printemps 2026}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Titre ──────────────────────────────────────────────────────────────────────
+\title{%
+  \vspace{-1cm}
+  {\Large\bfseries Rapport de Projet}\\[0.4cm]
+  {\LARGE\bfseries Construction d'un Système d'Indexation}\\
+  {\LARGE\bfseries et de Recherche d'Information}\\[0.6cm]
+  {\large sur le Corpus ADIT (2011--2014)}\\[0.8cm]
+  \hrule
+  \vspace{0.4cm}
+  {\normalsize UV LO17 — Université de Technologie de Compiègne}\\
+  {\normalsize Printemps 2026}
+}
+\author{%
+  Pierre \textsc{Fromont Boissel} \quad Maxime \textsc{Doudy}\\
+  \small Filière GI04
+}
+\date{}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\tableofcontents
+\clearpage
+
+\input{sections/00-introduction}
+\input{sections/01-preparation-corpus}
+\input{sections/02-anti-dictionnaire}
+\input{sections/03-lemmatisation-index}
+\input{sections/04-correcteur}
+\input{sections/05-traitement-requetes}
+\input{sections/06-moteur-recherche}
+\input{sections/07-conclusion}
+
+\end{document}

@@ -1,0 +1,86 @@
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Traitement des requêtes}
+\label{chap:td5}
+% ══════════════════════════════════════════════════════════════════════════════
+
+La cinquième étape constitue la couche d'entrée du système de recherche : il s'agit de
+transformer une requête en langage naturel français — saisie librement par un utilisateur
+— en une structure de données exploitable par les index inversés. Le cours (chapitre~4,
+Grammaires d'interrogation) distingue deux niveaux dans ce traitement : l'extraction des
+\textbf{métadonnées structurées} (dates, rubriques, filtres) et l'identification des
+\textbf{opérateurs logiques}. L'approche adoptée s'appuie sur des expressions régulières
+hiérarchisées, préférées aux analyseurs de dépendances spaCy qui se sont révélés
+inefficaces sur ce domaine spécialisé (0/12 entités DATE reconnues par
+\texttt{fr\_core\_news\_sm}).
+
+\section{Architecture du parser de requêtes}
+
+La classe \texttt{QueryParser} applique cinq étapes séquentielles. Chacune reçoit le
+texte résiduel laissé par la précédente, garantissant qu'aucun span déjà consommé
+ne pollue les étapes suivantes. La sortie est un dataclass \texttt{ParsedQuery} figé :
+
+\begin{lstlisting}[caption={Pipeline d'extraction séquentiel de \texttt{QueryParser.parse()}},
+  label={lst:query_pipeline}]
+def parse(self, query: str) -> ParsedQuery:
+    text = query.strip()
+    date_min, date_max, text = _extract_dates(text)       # 12 patterns regex
+    rubrique, text           = _extract_rubrique(text)    # 6 sections ADIT
+    filtre_images, zone, text = _extract_filters(text)    # images / zone titre
+    operateurs, text         = _extract_operators(text)   # AND / OR / NOT
+    mots_cles                = _extract_keywords(text, self._spell_checker)
+    return ParsedQuery(mots_cles=mots_cles, rubrique=rubrique,
+                       date_min=date_min, date_max=date_max,
+                       operateurs=operateurs, filtre_images=filtre_images,
+                       zone=zone)
+\end{lstlisting}
+
+L'ordre des étapes est critique : les filtres d'images sont extraits \emph{avant} les
+opérateurs pour que le mot \texttt{sans} dans \og{}sans image\fg{} soit consommé par la
+règle des filtres et non interprété comme un opérateur NOT.
+
+\section{Extraction des métadonnées et des opérateurs}
+
+\paragraph{Dates.} Douze patterns compilés, ordonnés du plus spécifique au plus général.
+Une plage \og{}en 2014\fg{} produit \texttt{date\_min='2014-01-01'} et
+\texttt{date\_max='2014-12-31'} ; un mois seul (\og{}novembre 2011\fg{}) calcule le
+dernier jour via \texttt{calendar.monthrange}. Toutes les dates sont normalisées en
+ISO~8601 pour être directement comparables lors du filtrage en TD6.
+
+\paragraph{Rubriques.} Six sections ADIT reconnues avec leurs alias (variantes accentuées,
+singulier/pluriel). Le contexte lexical (\og{}de la rubrique\fg{}, \og{}provenant de\fg{}…)
+est consommé pour éviter les résidus dans les mots-clés.
+
+\paragraph{Opérateurs logiques.} Le pattern NOT couvre les marqueurs explicites
+(\texttt{mais pas}, \texttt{et non}, \texttt{sans}) et la négation discontinue française
+\texttt{ne [verbe] pas} — forme courante dans les requêtes naturelles, invisible pour
+un matching lexical simple. OR est détecté par \verb|\bou\b|. En l'absence de tout
+marqueur, \texttt{operateurs = ["AND"]} par défaut.
+
+\section{Résultats}
+
+\begin{table}[ht]
+\centering
+\caption{Exemples de requêtes traitées (extrait des 33 requêtes de l'annexe TD5)}
+\label{tab:td5_examples}
+\begin{tabular}{>{\small}p{5.8cm} >{\small}p{2.8cm} >{\small}p{2cm} >{\small}p{1.8cm}}
+\toprule
+\textbf{Requête} & \textbf{mots\_clés} & \textbf{rubrique} & \textbf{opérateurs} \\
+\midrule
+articles de la rubrique HE parlant des systèmes embarqués
+  & [systèmes, embarqués] & HE & AND \\
+parus entre le 3 mars 2013 et le 4 mai 2013
+  & [] & — & AND \\
+Focus, santé, 2014
+  & [santé] & Focus & AND \\
+CNRS mais pas Centrale Paris
+  & [cnrs, centrale, paris] & — & AND, NOT \\
+avec des images dont le titre contient croissance
+  & [croissance] & — & AND \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:td5_examples} montre que le pipeline traite correctement 31 des
+33 requêtes de l'annexe. Les deux limitations résiduelles sont l'extraction d'une seule
+rubrique simultanée (requête~[28]) et l'exclusion du token \texttt{3D} par le tokeniseur
+lettre-only. La couverture de tests atteint 96\,\% sur 352 tests (68 spécifiques à ce TD).

@@ -1,0 +1,98 @@
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Moteur de recherche}
+\label{chap:td6}
+% ══════════════════════════════════════════════════════════════════════════════
+
+Le sixième et dernier TD réalise l'intégration complète du système : le parser de requêtes
+du TD5 est branché sur les index inversés du TD3, formant un moteur de recherche
+opérationnel. La consigne demande également une évaluation empirique sur un jeu de test
+tiré de l'annexe, et une interface utilisateur permettant d'interroger le corpus
+interactivement. Ce TD illustre les notions de précision, rappel et pertinence au sens
+du cours (chapitre~5, Modèle vectoriel et évaluation).
+
+\section{Architecture et modèle de recherche}
+
+Le moteur s'organise en quatre modules dans \texttt{src/adit\_corpus\_indexing/search/} :
+\texttt{engine.py} orchestre le traitement complet d'une requête, \texttt{corpus\_reader.py}
+maintient en mémoire les métadonnées de chaque article, \texttt{index\_loader.py} charge
+les fichiers TSV, et \texttt{evaluator.py} mesure les performances. Le modèle implémenté
+est un \textbf{modèle booléen classé} (\emph{ranked boolean}) : les mots-clés sont
+pondérés par le score TF-IDF précalculé (formule~\ref{eq:tfidf}) issu des index TD3,
+tandis que les filtres facettes opèrent en AND strict sur des ensembles d'identifiants.
+
+\begin{lstlisting}[caption={Exécution d'une requête : scoring puis intersection des filtres},
+  label={lst:engine_execute}]
+def _execute(self, pq: ParsedQuery) -> list[SearchResult]:
+    # 1. Score des mots-clés via index TF-IDF précalculé
+    keyword_scores = self._search_keywords(pq.mots_cles, pq.operateurs, pq.zone)
+
+    # 2. Ensembles de documents satisfaisant chaque filtre
+    rubrique_docs = self._get_rubrique_docs(pq.rubrique) if pq.rubrique else None
+    date_docs     = self._get_date_docs(pq.date_min, pq.date_max)
+    image_docs    = self._corpus.ids_with_images() if pq.filtre_images else None
+
+    # 3. Intersection AND de tous les filtres actifs
+    result_ids = set(keyword_scores.keys()) or None
+    for fset in (rubrique_docs, date_docs, image_docs):
+        if fset is not None:
+            result_ids = fset if result_ids is None else result_ids & fset
+    ...
+\end{lstlisting}
+
+\section{Évaluation expérimentale}
+
+Le ground truth a été constitué \textbf{indépendamment du moteur} par grep direct sur
+les fichiers TSV et parsing XML, garantissant que les métriques reflètent des performances
+réelles et non circulaires. Les mesures de précision $P$, rappel $R$ et F1 suivent les
+définitions du cours :
+\begin{equation}
+  P = \frac{|TP|}{|TP|+|FP|}, \quad
+  R = \frac{|TP|}{|TP|+|FN|}, \quad
+  F_1 = \frac{2PR}{P+R}
+  \label{eq:prf1}
+\end{equation}
+
+\begin{table}[ht]
+\centering
+\caption{Résultats d'évaluation sur 10 requêtes du ground truth (100 exécutions chacune)}
+\label{tab:eval}
+\begin{tabular}{clrrrrr}
+\toprule
+\textbf{\#} & \textbf{Requête (abrégée)} & \textbf{P} & \textbf{R} & \textbf{F1}
+  & \textbf{Ret.} & \textbf{t (ms)} \\
+\midrule
+1  & Focus + images          & 1,000 & 1,000 & 1,000 & 56  & 1,04 \\
+2  & Rubrique A lire         & 1,000 & 1,000 & 1,000 & 11  & 0,16 \\
+3  & En direct des labos     & 1,000 & 1,000 & 1,000 & 41  & 0,36 \\
+4  & Sans image              & 1,000 & 1,000 & 1,000 & 213 & 1,50 \\
+5  & Titre $\ni$ nucléaire   & 1,000 & 1,000 & 1,000 & 4   & 0,63 \\
+6  & Titre $\ni$ europe      & 1,000 & 1,000 & 1,000 & 1   & 0,13 \\
+7  & Nov.\ 2011 + recherche  & 1,000 & 1,000 & 1,000 & 1   & 1,92 \\
+8  & Focus + 08–09/2011      & 1,000 & 1,000 & 1,000 & 5   & 0,21 \\
+9  & HE + systèmes embarqués & 1,000 & 1,000 & 1,000 & 1   & 0,12 \\
+10 & Focus + 2014 + santé    & 1,000 & 1,000 & 1,000 & 3   & 0,26 \\
+\midrule
+\multicolumn{2}{l}{\textbf{Macro-moyenne}}
+  & \textbf{1,000} & \textbf{1,000} & \textbf{1,000} & & \textbf{0,63} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:eval} montre P\,=\,R\,=\,F1\,=\,1,000 sur toutes les requêtes,
+avec un temps de réponse moyen de 0,63\,ms — soit 240 fois en dessous du seuil de
+perception humaine. Ces métriques parfaites s'expliquent par la nature déterministe du
+modèle booléen sur un corpus fermé : les filtres d'ensemble (rubrique, date, images)
+sont exacts, et les requêtes mot-clé opèrent sur des racines Snowball sans ambiguïté.
+Deux corrections ont été identifiées \emph{grâce} à l'indépendance du ground truth :
+la normalisation des rubriques (variantes non prévues dans l'index) et le verbe de cadrage
+\og{}voir\fg{} traité comme mot-clé actif, réduisant le rappel de la requête~Q8 de 1,0
+à 0,4 avant correction.
+
+\section{Interface utilisateur}
+
+L'interface est une application web \textbf{Streamlit} dépassant la consigne minimale :
+tri par pertinence, date croissante ou décroissante ; extrait contextuel (\emph{snippet})
+de~200 caractères autour du premier mot-clé ; lien vers l'article HTML original ; panneau
+d'\og{}Analyse de requête\fg{} décomposant la \texttt{ParsedQuery} ; panneau d'évaluation
+interactif affichant P/R/F1 par requête avec explication pédagogique des métriques.
+Le déploiement est reproductible via un \texttt{Dockerfile} inclus dans le dépôt.

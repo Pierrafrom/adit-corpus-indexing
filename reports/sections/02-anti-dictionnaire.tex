@@ -1,0 +1,83 @@
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Anti-dictionnaire}
+\label{chap:td2}
+% ══════════════════════════════════════════════════════════════════════════════
+
+À partir du fichier \texttt{corpus.xml} produit en TD1, la deuxième étape vise à
+identifier et supprimer les termes non porteurs de sens avant toute indexation. Cette
+liste de mots exclus, appelée \textbf{anti-dictionnaire} ou \emph{stop list}, est au
+cœur de la gestion du vocabulaire en RI (cours, chapitre~2). La méthode retenue est
+statistique et s'appuie sur le coefficient TF-IDF, qui quantifie formellement le
+caractère discriminant de chaque terme dans le corpus.
+
+\section{Fondements théoriques : TF-IDF et loi de Zipf}
+
+La loi de Zipf décrit la distribution des fréquences de mots dans tout grand corpus :
+un petit nombre de termes très fréquents représente la majorité des occurrences mais
+véhicule peu d'information thématique. La mesure formelle retenue est le coefficient
+\textbf{IDF} (\emph{Inverse Document Frequency}) :
+\begin{equation}
+  \operatorname{idf}(t) = \log_{10}\!\left(\frac{N}{\operatorname{df}(t)}\right)
+  \label{eq:idf}
+\end{equation}
+où $N = 326$ est le nombre d'articles et $\operatorname{df}(t)$ le nombre d'articles
+contenant au moins une occurrence du terme $t$. Un token ubiquitaire (présent dans
+tous les articles) obtient $\operatorname{idf}(t)=0$, l'excluant naturellement de tout
+calcul de pertinence. La pondération finale est le produit :
+\begin{equation}
+  \operatorname{tf\text{-}idf}(t,d)
+    = \bigl(1 + \log_{10} \operatorname{count}(t,d)\bigr)
+      \times \operatorname{idf}(t)
+  \label{eq:tfidf}
+\end{equation}
+La TF logarithmique (formule~\ref{eq:tfidf}) comprime l'influence des termes très
+répétés, conformément au cours (§5.4) : 10 occurrences donnent $\operatorname{tf}=2{,}0$
+là où une TF brute aurait donné 10.
+
+\section{Pipeline de calcul et seuillage}
+
+Le pipeline s'exécute en six étapes séquentielles. La tokenisation repose sur la
+regex \texttt{[a-zA-ZÀ-ÿ]+} et inclut une normalisation préalable des élisions
+françaises, essentielle pour éviter les tokens parasites mono-caractères :
+
+\begin{lstlisting}[caption={Normalisation des élisions avant tokenisation},
+  label={lst:elisions}]
+_ELISION_RE = re.compile(r"\b(qu|[ldjmtscn])['']", re.IGNORECASE)
+
+def normalize_elisions(text: str) -> str:
+    """Supprime les préfixes clitiques : l'innovation -> innovation."""
+    return _ELISION_RE.sub("", text)
+\end{lstlisting}
+
+Sans cette normalisation, \texttt{l'innovation} produirait les tokens \texttt{l} et
+\texttt{innovation}, gonflant artificiellement la fréquence de résidus mono-caractères
+(\texttt{l}, \texttt{d}, \texttt{s}…) dans l'IDF. Le seuillage applique deux critères
+inspirés de la loi de Zipf : un \textbf{seuil bas} $\theta=0{,}5$ pour exclure les
+termes trop communs ($\operatorname{df}(t) \geq 103$ articles, soit 31\,\% du corpus),
+et un \textbf{seuil haut} désactivé ($+\infty$) afin de préserver les hapaxes qui
+sont souvent les meilleurs discriminants pour les requêtes spécialisées.
+
+\section{Résultats et analyse critique}
+
+La tokenisation du corpus produit 163\,842 occurrences et 14\,177 formes distinctes,
+soit environ 503 tokens par article. Le seuil $\theta=0{,}5$ identifie \textbf{88 mots
+vides}, exclusivement des articles, prépositions, pronoms et auxiliaires du français.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.82\textwidth]{../outputs/plot_idf_lemmes.png}
+  \caption{Distribution des scores IDF sur les lemmes du corpus ADIT.
+    La concentration à $\operatorname{idf}=2{,}51$ illustre la prédominance des termes
+    techniques à faible fréquence documentaire (médiane = maximum).}
+  \label{fig:idf_distribution}
+\end{figure}
+
+La figure~\ref{fig:idf_distribution} révèle une distribution bimodale caractéristique
+d'un corpus de veille spécialisé : un petit groupe de tokens ubiquitaires (IDF $\approx 0$)
+et une masse de termes techniques n'apparaissant que dans un ou deux articles
+(IDF $\approx 2{,}51$). Plus de 68\,\% du vocabulaire n'apparaît que dans 1 à 2
+articles — ces quasi-hapaxes constituent les descripteurs les plus discriminants du
+corpus et justifient la désactivation du seuil haut. Le top des scores TF-IDF confirme
+la cohérence sémantique : \texttt{hoffmann} (5,67), \texttt{sérotonine} (5,47),
+\texttt{envisat} (5,39) sont tous des termes très spécifiques à un unique article.
+La couverture de tests atteint 95\,\% sur 165 tests.

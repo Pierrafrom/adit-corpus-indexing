@@ -1,0 +1,44 @@
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+% ══════════════════════════════════════════════════════════════════════════════
+
+Ce rapport présente le système de recherche d'information développé dans le cadre de
+l'UV LO17 à l'UTC. Le corpus cible est constitué de 326 articles issus des bulletins
+de veille technologique de l'ADIT publiés entre 2011 et 2014, fournis sous la forme
+de fichiers HTML hétérogènes. Le projet consiste à construire, pas à pas sur six séances
+de travaux dirigés, l'intégralité de la chaîne allant de l'extraction brute des données
+jusqu'à un moteur de recherche opérationnel interrogeable en langage naturel.
+
+La figure~\ref{fig:pipeline_global} présente l'architecture globale du système. Chaque
+bloc correspond à un TD dont le livrable devient l'entrée du suivant, garantissant une
+progression incrémentale et vérifiable. L'ensemble du code est écrit en Python~3.12,
+géré par \texttt{uv} et structuré selon la convention \emph{src layout} de la PyPA.
+La couverture de tests s'élève à 93\,\% sur 369 tests unitaires à l'issue du projet.
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm and 0.3cm,
+      box/.style={draw, rounded corners=3pt, fill=codegray,
+                  minimum width=2.6cm, minimum height=0.85cm,
+                  font=\small\ttfamily, align=center},
+      arr/.style={-Stealth, thick},
+    ]
+    \node[box] (td1) {TD1\\corpus.xml};
+    \node[box, right=of td1] (td2) {TD2\\anti-dico};
+    \node[box, right=of td2] (td3) {TD3\\index inversé};
+    \node[box, right=of td3] (td4) {TD4\\correcteur};
+    \node[box, right=of td4] (td5) {TD5\\parser req.};
+    \node[box, right=of td5] (td6) {TD6\\moteur};
+    \draw[arr] (td1) -- (td2);
+    \draw[arr] (td2) -- (td3);
+    \draw[arr] (td3) -- (td4);
+    \draw[arr] (td4) -- (td5);
+    \draw[arr] (td5) -- (td6);
+    \node[above=0.15cm of td1, font=\tiny\itshape] {HTML brut};
+    \node[above=0.15cm of td6, font=\tiny\itshape] {requête NL};
+  \end{tikzpicture}
+  \caption{Architecture globale du système : chaîne de traitement en six étapes.}
+  \label{fig:pipeline_global}
+\end{figure}

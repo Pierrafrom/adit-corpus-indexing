@@ -1,0 +1,26 @@
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter*{Conclusion}
+\addcontentsline{toc}{chapter}{Conclusion}
+% ══════════════════════════════════════════════════════════════════════════════
+
+Ce projet a permis de construire, de la donnée brute au moteur opérationnel, un système
+complet d'indexation et de recherche d'information sur le corpus ADIT. Les six étapes
+correspondent aux briques fondamentales de toute architecture RI : constitution du
+corpus, contrôle du vocabulaire, réduction morphologique, tolérance aux fautes, analyse
+de requête, et évaluation. Le moteur final atteint P\,=\,R\,=\,F1\,=\,1,000 sur le jeu
+de 10 requêtes, avec un temps de réponse moyen de 0,63\,ms, et une couverture de tests
+de 93\,\% sur 369 tests unitaires.
+
+D'un point de vue méthodologique, deux enseignements principaux ressortent. Premièrement,
+l'évaluation honnête d'un système RI exige un ground truth \emph{indépendant} du système :
+c'est cette indépendance qui a permis d'identifier deux bugs réels (normalisation des
+rubriques, verbe de cadrage parasite) qui auraient été invisibles avec un oracle interne.
+Deuxièmement, les petits modèles de langue (ici \texttt{fr\_core\_news\_sm}) sont
+souvent insuffisants pour des domaines spécialisés : 0/12 entités DATE reconnues sur
+les requêtes de test ont conduit à préférer les expressions régulières hiérarchisées,
+plus reproductibles et plus rapides sur ce corpus.
+
+Les pistes d'amélioration identifiées sont l'indexation par trigrammes pour le correcteur
+(robustesse aux erreurs en début de mot), le passage à BM25 pour le scoring (normalisation
+par longueur de document), et l'utilisation d'un modèle de langue de type CamemBERT pour
+une analyse sémantique plus fine des requêtes complexes.

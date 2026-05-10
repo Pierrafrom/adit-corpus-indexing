@@ -1,0 +1,389 @@
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Préparation du corpus}
+\label{chap:td1}
+% ══════════════════════════════════════════════════════════════════════════════
+
+La première étape du projet est la constitution du corpus documentaire au sens du
+cours (chapitre~2, Vocabulaire). Un corpus est l'ensemble des textes sur lesquels portera
+l'indexation ; sa qualité conditionne directement les performances de tout le système aval.
+L'objectif est de transformer 326 fichiers HTML hétérogènes en un unique fichier
+\texttt{corpus.xml} structuré, dont le schéma est imposé par le sujet. Ce fichier
+servira de point d'entrée à toutes les étapes suivantes.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Objectif du TD}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Ce TD constitue la première étape du projet LO17, dont le but est de construire un
+système complet d'indexation et de recherche d'information sur une archive de bulletins
+de veille technologique de l'ADIT. L'archive étudiée couvre plus de 300 articles extraits
+de bulletins de veille sur la France entre 2011 et 2014. Chaque article contient des
+méta-informations structurées (numéro, date, rubrique, auteur) ainsi que des contenus
+(texte, images, contacts).
+
+L'objectif concret est de préparer ce corpus en vue de son indexation future : à partir
+des fichiers HTML bruts, produire un unique fichier \texttt{corpus.xml} structuré qui
+rassemble l'ensemble des articles dans un format facilement exploitable. La méthode est
+incrémentale — traiter un champ à la fois, valider sur plusieurs fichiers, puis généraliser
+au corpus entier. La robustesse est une exigence explicite : toute absence de champ doit
+être tolérée et journalisée sans interrompre le traitement.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Présentation du corpus ADIT}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Les bulletins de l'ADIT (Agence pour la Diffusion de l'Information Technologique)
+constituent une archive de veille technologique couvrant des thématiques variées :
+biotechnologie, systèmes embarqués, matériaux, numérique. Chaque bulletin contient
+plusieurs articles, chacun structuré en champs distincts (numéro, date, rubrique,
+auteur, texte, images, contacts). Le corpus présente cependant plusieurs difficultés :
+encodage déclaré en ISO-8859-1 alors que le contenu est en UTF-8, CSS classes non
+documentées, navigation par tableaux HTML imbriqués, et présence de champs parfois absents.
+
+Le schéma XML cible comprend dix champs par document : \texttt{<article>},
+\texttt{<bulletin>}, \texttt{<date>}, \texttt{<rubrique>}, \texttt{<titre>},
+\texttt{<auteur>}, \texttt{<texte>}, \texttt{<images>}, \texttt{<contact>}.
+La figure~\ref{fig:architecture_td1} détaille les dépendances entre les modules
+d'extraction.
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}[
+      mod/.style={draw, rounded corners=3pt, fill=codegray, minimum width=3cm,
+                  minimum height=0.75cm, font=\small\ttfamily, align=center},
+      arr/.style={-Stealth},
+    ]
+    \node[mod] (models)  {models.py};
+    \node[mod, left=2cm of models]  (parser)  {parser.py};
+    \node[mod, right=2cm of models] (builder) {xml\_builder.py};
+    \node[mod, below=1.2cm of models] (pipeline) {pipeline.py};
+    \draw[arr] (parser)  -- (models)   node[midway, above, font=\tiny] {Article};
+    \draw[arr] (builder) -- (models)   node[midway, above, font=\tiny] {Article};
+    \draw[arr] (pipeline) -- (parser)  node[near end, right, font=\tiny] {parse()};
+    \draw[arr] (pipeline) -- (builder) node[near end, left,  font=\tiny] {add()};
+  \end{tikzpicture}
+  \caption{Dépendances entre les modules du TD1 : \texttt{models.py} est le seul point
+    de contact entre parser et builder.}
+  \label{fig:architecture_td1}
+\end{figure}
+
+La figure~\ref{fig:architecture_td1} montre que le module \texttt{models.py} joue le
+rôle de contrat d'interface entre les deux modules principaux, sans qu'aucun n'ait
+connaissance de l'implémentation de l'autre.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Architecture et conception}
+% ─────────────────────────────────────────────────────────────────────────────
+
+L'architecture suit une séparation claire des responsabilités. Le modèle de données
+repose sur trois dataclasses : \texttt{Article} centralise tous les champs du corpus ;
+\texttt{Person} structure l'auteur (nom, email) ; \texttt{Contact} enrichit les
+informations \og{}Pour en savoir plus\fg{} avec quatre attributs distincts (nom, email,
+URL, téléphone). Ce choix — dataclass plutôt que \texttt{dict} — permet d'avoir des
+types annotés, une autocomplétion IDE, et de détecter dès la construction si un champ
+est absent.
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}[
+      cls/.style={draw, rounded corners=2pt, fill=codegray,
+                  inner sep=5pt, align=left, font=\scriptsize\ttfamily},
+      comp/.style={-Stealth, thick},
+      dep/.style={-Stealth, dashed, thick},
+    ]
+    % Nœud central
+    \node[cls] (article) at (0,0) {
+      \normalfont\textbf{Article}\\[2pt]
+      code, bulletin : str\\
+      date : date | None\\
+      rubrique, title, body : str\\
+      author : Person | None\\
+      contacts : list[Contact]
+    };
+    % Dataclasses associées
+    \node[cls] (person) at (6.5, 1.5) {
+      \normalfont\textbf{Person}\\[2pt]
+      name : str\\
+      email : str
+    };
+    \node[cls] (contact) at (6.5, -1.5) {
+      \normalfont\textbf{Contact}\\[2pt]
+      name, email : str\\
+      url, phone : str
+    };
+    % Classes de service
+    \node[cls] (parser) at (-6, 1.5) {
+      \normalfont\textbf{ArticleParser}\\[2pt]
+      parse(path) : Article
+    };
+    \node[cls] (builder) at (-6, -1.5) {
+      \normalfont\textbf{CorpusBuilder}\\[2pt]
+      add\_article(a : Article)\\
+      write(path : Path)
+    };
+    % Relations de composition
+    \draw[comp] (article.east |- person.west) -- (person.west)
+      node[midway, above, font=\tiny\normalfont] {author};
+    \draw[comp] (article.east |- contact.west) -- (contact.west)
+      node[midway, below, font=\tiny\normalfont] {contacts};
+    % Relations de dépendance (crée / consomme)
+    \draw[dep] (parser.east) -- (article.west |- parser.east)
+      node[midway, above, font=\tiny\normalfont] {crée};
+    \draw[dep] (builder.east) -- (article.west |- builder.east)
+      node[midway, below, font=\tiny\normalfont] {consomme};
+  \end{tikzpicture}
+  \caption{Diagramme de classes du TD1 : \texttt{Article} est le pivot entre les classes
+    de données (\texttt{Person}, \texttt{Contact}) et les classes de service
+    (\texttt{ArticleParser}, \texttt{CorpusBuilder}).}
+  \label{fig:classes_td1}
+\end{figure}
+
+La figure~\ref{fig:classes_td1} illustre que \texttt{ArticleParser} et
+\texttt{CorpusBuilder} ne se connaissent pas mutuellement : \texttt{Article} est leur
+seul point de couplage. Cette structure facilite les tests unitaires — chaque module
+est testable indépendamment — et les évolutions futures, par exemple changer le format
+de sortie sans toucher au parser.
+
+Le flux d'exécution suit quatre phases séquentielles : (1) glob sur
+\texttt{data/BULLETINS/*.htm} → 326 chemins ; (2) pour chaque fichier, parsing HTML
+et construction d'un objet \texttt{Article} ; (3) vérification de doublon sur la clé
+\texttt{(bulletin, code)} ; (4) sérialisation en \texttt{corpus.xml} puis rapport de
+validation par champ.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Extraction champ par champ}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Le module \texttt{parser.py} expose une fonction publique par champ. Chacune est testée
+indépendamment avant d'être intégrée dans \texttt{ArticleParser.parse()}.
+
+\paragraph{Numéro d'article (\texttt{parse\_code}).}
+Recherche tous les \texttt{<span class="style15">} contenant le texte \og{}Code\fg{},
+puis suit la balise \texttt{<a>} adjacente pour extraire l'identifiant numérique.
+
+\begin{lstlisting}[caption={Extraction du numéro d'article par navigation sur les ancres},
+  label={lst:parse_code}]
+def parse_code(soup: BeautifulSoup) -> str:
+    for span in soup.find_all("span", class_="style15"):
+        if "Code" in span.get_text():
+            a_tag = span.find_next("a")
+            if isinstance(a_tag, Tag):
+                return a_tag.get_text(strip=True)
+    logger.warning("Missing article code")
+    return ""
+\end{lstlisting}
+
+\paragraph{Numéro de bulletin (\texttt{parse\_bulletin}).}
+Localise le \texttt{<span class="style32">} qui contient systématiquement l'identifiant
+du bulletin (ex.\ \texttt{BE France 258}).
+
+\paragraph{Rubrique (\texttt{parse\_rubrique}).}
+Recherche le premier \texttt{<span class="style42">} à l'intérieur d'un
+\texttt{<p class="style96">}. Ce sélecteur est distinct de celui utilisé pour la date,
+car \texttt{style96} identifie les paragraphes du corps de l'article.
+
+\paragraph{Titre (\texttt{parse\_title}).}
+Localise l'unique \texttt{<span class="style17">} du fichier.
+
+\paragraph{Auteur (\texttt{parse\_author}).}
+Utilise le helper \texttt{\_find\_sibling\_cell()} pour localiser la cellule de tableau
+voisine de l'étiquette \texttt{style28} « Rédacteur », puis extrait nom et email depuis
+le \texttt{<span class="style95">} qu'elle contient. Le préfixe \og{}ADIT - \fg{} est
+supprimé si présent.
+
+\paragraph{Texte (\texttt{parse\_body}).}
+Filtre les paragraphes \texttt{<p class="style96">} dont le premier enfant \texttt{<span>}
+porte la classe \texttt{style95}. Ce filtrage distingue le corps textuel des rubriques et
+dates qui partagent la même classe de paragraphe.
+
+\paragraph{Images (\texttt{parse\_images}).}
+Extrait les URLs des \texttt{<img>} présents dans la sidebar gauche
+\texttt{<td class="FWExtra">}, en excluant les espaceurs (\texttt{\_clear.gif}) et les
+icônes de navigation (\texttt{Resources/}). Les \texttt{<legendeImage>} sont
+structurellement présentes dans le XML mais vides : les légendes ne sont pas encodées
+dans le HTML source du corpus.
+
+\paragraph{Contacts (\texttt{parse\_contacts}).}
+Localise la cellule voisine de « Pour en savoir plus » puis parse chaque
+\texttt{<p class="style44"> > <span class="style85">} par expressions régulières
+pour extraire séparément nom, email (via \texttt{href="mailto:"} ou regex), URL et
+téléphone. Les contacts sans nom, email ni URL sont filtrés.
+
+\paragraph{Sérialisation XML (\texttt{CorpusBuilder.write}).}
+La sérialisation finale utilise \texttt{lxml.etree} avec déclaration d'encodage UTF-8,
+indentation et pretty-print. Le choix de \texttt{lxml.etree} (plutôt que la concaténation
+de chaînes) garantit un XML valide et bien encodé.
+
+\begin{lstlisting}[caption={Sérialisation finale du corpus en XML indenté UTF-8},
+  label={lst:corpus_write}]
+def write(self, output_path: Path) -> None:
+    tree = etree.ElementTree(self._root)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    tree.write(
+        str(output_path),
+        encoding="utf-8",
+        xml_declaration=True,
+        pretty_print=True,
+    )
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Extraction défensive des champs}
+% ─────────────────────────────────────────────────────────────────────────────
+
+La stratégie d'extraction est \textbf{défensive} : chaque extracteur retourne
+\texttt{None} en cas d'absence du champ cible et journalise un avertissement, sans
+jamais lever d'exception. Le corpus ADIT est bruité — des balises ou des classes CSS
+peuvent être absentes dans une minorité de fichiers — et un crash sur un seul article
+invaliderait l'ensemble du traitement.
+
+\begin{lstlisting}[caption={Extraction de la date avec gestion défensive des cas manquants},
+  label={lst:parse_date}]
+def parse_date(soup: BeautifulSoup) -> date | None:
+    style32 = soup.find("span", class_="style32")
+    if style32 is None:
+        logger.warning("Missing style32 span — date unavailable")
+        return None
+    # remonter au <p> parent pour trouver le style42 adjacent
+    parent = style32.parent
+    style42 = parent.find("span", class_="style42") if parent else None
+    if style42 is None:
+        return None
+    raw = style42.get_text(strip=True)
+    try:
+        parts = raw.split("/")
+        return date(int(parts[2]), int(parts[1]), int(parts[0]))
+    except (ValueError, IndexError):
+        logger.warning("Unparseable date value: %r", raw)
+        return None
+\end{lstlisting}
+
+Le code~\ref{lst:parse_date} illustre le patron systématiquement appliqué. La navigation
+dans les tableaux HTML pour l'auteur et les contacts repose sur un helper
+\texttt{\_find\_sibling\_cell()} qui localise la cellule adjacente à une étiquette
+de style \texttt{style28} donnée, évitant toute duplication de logique.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Résultats et couverture}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Le pipeline produit 326 documents sans aucun doublon (vérification sur la clé
+\texttt{(bulletin, code)}). Le tableau~\ref{tab:td1_coverage} présente la couverture
+par champ à l'issue du traitement.
+
+\begin{table}[ht]
+\centering
+\caption{Couverture du corpus après extraction (TD1, 326 articles)}
+\label{tab:td1_coverage}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Champ} & \textbf{Présent} & \textbf{Absent} & \textbf{Couverture} \\
+\midrule
+article  & 326 & 0 & 100\,\% \\
+bulletin & 326 & 0 & 100\,\% \\
+date     & 326 & 0 & 100\,\% \\
+rubrique & 326 & 0 & 100\,\% \\
+titre    & 326 & 0 & 100\,\% \\
+auteur   & 326 & 0 & 100\,\% \\
+texte    & 326 & 0 & 100\,\% \\
+contact  & 325 & 1 &  99\,\% \\
+images   & 326 & 0 & 100\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:td1_coverage} confirme une couverture quasi parfaite : seul un
+article sur 326 est dépourvu de section \og{}Pour en savoir plus\fg{}. Les
+\texttt{<legendeImage>} sont structurellement présentes dans le XML mais vides, les
+légendes n'étant pas encodées dans le HTML source. Le corpus contient en outre
+1\,630 entrées \texttt{<image>} au total, soit environ 5 images par article en moyenne.
+
+La sortie du pipeline confirme l'absence de doublons et la couverture complète :
+
+\begin{lstlisting}[language={}, basicstyle=\ttfamily\scriptsize,
+  caption={Extrait du rapport de validation produit par \texttt{pipeline.py}},
+  label={lst:pipeline_output}]
+INFO: Found 326 bulletin files
+INFO: Corpus written to outputs/corpus.xml (326 documents)
+INFO: ====================================================
+INFO: Corpus report — 326 articles written (0 duplicates skipped)
+INFO: Field         Present  Missing   Coverage
+INFO: code              326        0     100.0%
+INFO: bulletin          326        0     100.0%
+INFO: date              326        0     100.0%
+INFO: rubrique          326        0     100.0%
+INFO: title             326        0     100.0%
+INFO: author            326        0     100.0%
+INFO: body              326        0     100.0%
+\end{lstlisting}
+
+La suite de 75 tests unitaires s'exécute en 0,17\,s. Le tableau~\ref{tab:td1_coverage_code}
+détaille la couverture par module.
+
+\begin{table}[ht]
+\centering
+\caption{Couverture de code par module (TD1, pytest-cov)}
+\label{tab:td1_coverage_code}
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Module} & \textbf{Stmts} & \textbf{Miss} & \textbf{Cover} & \textbf{Lignes manquantes} \\
+\midrule
+\texttt{\_\_init\_\_.py}    &   0 &  0 & 100\,\% & — \\
+\texttt{models.py}          &  23 &  0 & 100\,\% & — \\
+\texttt{parser.py}          & 155 &  5 &  97\,\% & 58--59, 137, 217, 220 \\
+\texttt{xml\_builder.py}    &  47 &  0 & 100\,\% & — \\
+\midrule
+\textbf{Total}              & 225 &  5 &  98\,\% & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:td1_coverage_code} montre que les 5 lignes non couvertes dans
+\texttt{parser.py} correspondent à des chemins d'erreur peu fréquents : l'avertissement
+\og{}style32 has no parent \texttt{<p>}\fg{} (lignes 58--59), la construction d'URL sans
+préfixe \texttt{http://} (ligne 137), et deux gardes défensives dans \texttt{parse\_contacts}
+pour des éléments non-\texttt{Tag} (lignes 217, 220).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Difficultés rencontrées}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\paragraph{Encodage des fichiers HTML.}
+Les fichiers du corpus déclarent \texttt{charset=ISO-8859-1} dans leur en-tête HTML,
+mais le sujet précise qu'ils sont en UTF-8. L'utilisation de \texttt{path.read\_bytes()}
+plutôt que \texttt{open(\ldots, encoding=\ldots)} permet de laisser BeautifulSoup détecter
+l'encodage correct automatiquement via les métadonnées du document.
+
+\paragraph{Distinction rubrique / corps de l'article.}
+Les paragraphes de rubrique et les paragraphes de texte partagent la classe \texttt{style96}.
+La distinction repose sur la classe du premier enfant \texttt{<span>} : \texttt{style42}
+pour les métadonnées (rubrique, date) et \texttt{style95} pour le texte. Ce comportement
+n'est pas documenté dans les fichiers HTML et a nécessité une exploration manuelle de
+plusieurs bulletins.
+
+\paragraph{Navigation par tableaux pour l'auteur et les contacts.}
+Les champs « Rédacteur » et « Pour en savoir plus » ne sont pas identifiés par des
+attributs stables, mais par le texte d'une cellule de tableau voisine. Le helper
+\texttt{\_find\_sibling\_cell()} centralise cette logique de navigation pour les deux
+champs, évitant toute duplication de code.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Fonctionnalités supplémentaires}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\paragraph{Modélisation riche des contacts.}
+Au-delà de la consigne minimale (un champ \texttt{<contact>} textuel), les contacts
+sont modélisés par un dataclass \texttt{Contact} avec quatre attributs distincts
+(\texttt{name}, \texttt{email}, \texttt{url}, \texttt{phone}). Ce choix anticipe les
+besoins des TD suivants : l'indexation séparée des adresses email et des URLs de contact
+est beaucoup plus facile à partir de données structurées que depuis une chaîne brute.
+
+\paragraph{Mode échantillon (\texttt{SAMPLE\_SIZE}).}
+Le pipeline accepte la variable d'environnement \texttt{SAMPLE\_SIZE} pour limiter le
+traitement à $N$ fichiers, accélérant le cycle de développement lors des tests manuels :
+\texttt{SAMPLE\_SIZE=10 uv run python -m adit\_corpus\_indexing.pipeline}.
+
+\paragraph{Déduplication des articles.}
+Le pipeline détecte et ignore les doublons sur la clé \texttt{(bulletin, code)} en
+journalisant un avertissement. Aucun doublon n'a été trouvé dans le corpus actuel, mais
+ce mécanisme assure la robustesse si le répertoire venait à contenir des copies.

@@ -1,0 +1,126 @@
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Correcteur orthographique}
+\label{chap:td4}
+% ══════════════════════════════════════════════════════════════════════════════
+
+Avant d'interroger les index inversés, il faut s'assurer que les termes d'une requête
+correspondent à des entrées connues du lexique. Un mot mal orthographié ne figurant
+pas dans l'index retournerait zéro résultat, même si des documents pertinents existent.
+Le correcteur orthographique développé en TD4 résout ce problème en appliquant un
+pipeline déterministe à six étapes, combinant une heuristique de préfixe et la
+distance de Levenshtein pour identifier la correction la plus vraisemblable.
+
+\section{Distance de Levenshtein}
+
+La \textbf{distance de Levenshtein} (cours, chapitre~3) mesure le nombre minimal
+d'opérations élémentaires (insertion, suppression, substitution) pour transformer
+une chaîne $a$ en une chaîne $b$. Elle est calculée par programmation dynamique :
+\begin{equation}
+  \operatorname{lev}(a, b) = \begin{cases}
+    |a| & \text{si } |b| = 0 \\
+    |b| & \text{si } |a| = 0 \\
+    \operatorname{lev}(a_{1:}, b_{1:}) & \text{si } a_0 = b_0 \\
+    1 + \min\!\left\{
+      \operatorname{lev}(a_{1:}, b),\;
+      \operatorname{lev}(a, b_{1:}),\;
+      \operatorname{lev}(a_{1:}, b_{1:})
+    \right\} & \text{sinon}
+  \end{cases}
+  \label{eq:levenshtein}
+\end{equation}
+
+L'implémentation optimise la mémoire en ne conservant que la ligne courante de la
+matrice DP, réduisant l'empreinte de $O(|a|\cdot|b|)$ à $O(\min(|a|,|b|))$.
+
+\begin{lstlisting}[caption={Implémentation Levenshtein optimisée en mémoire},
+  label={lst:levenshtein}]
+def levenshtein(a: str, b: str) -> int:
+    if len(a) < len(b):
+        return levenshtein(b, a)
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        curr = [i]
+        for j, cb in enumerate(b, 1):
+            ins = prev[j] + 1
+            dlt = curr[j - 1] + 1
+            sub = prev[j - 1] + (ca != cb)
+            curr.append(min(ins, dlt, sub))
+        prev = curr
+    return prev[-1]
+\end{lstlisting}
+
+\section{Pipeline de correction en six étapes}
+
+La figure~\ref{fig:spell_pipeline} décrit le chemin de décision pour chaque terme
+d'une requête.
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners=3pt, fill=codegray,
+                  minimum width=3.5cm, minimum height=0.65cm,
+                  font=\small, align=center},
+      dec/.style={draw, diamond, fill=white, aspect=2.5,
+                  font=\small, align=center},
+      arr/.style={-Stealth, thick},
+      node distance=0.5cm and 1.3cm,
+    ]
+    \node[box] (start) {Terme de requête};
+    \node[dec, below=of start] (ent) {Entité ?\\(nombre, date)};
+    \node[box, right=1.4cm of ent] (ok_ent) {\texttt{entity}\\conservé tel quel};
+    \node[dec, below=of ent] (exact) {Dans\\le lexique ?};
+    \node[box, right=1.4cm of exact] (ok_exact) {\texttt{exact}\\retourne lemme};
+    \node[dec, below=of exact] (cands) {$k$ candidats\\par préfixe};
+    \node[box, right=1.4cm of cands] (nf) {\texttt{not\_found}\\introuvable};
+    \node[box, below=0.9cm of cands] (lev) {Levenshtein\\$\to$ candidat min};
+    \node[box, below=of lev] (out) {\texttt{CorrectionResult}\\(corrected, lemma)};
+
+    \draw[arr] (start) -- (ent);
+    \draw[arr] (ent) -- node[above, font=\tiny] {oui} (ok_ent);
+    \draw[arr] (ent) -- node[left,  font=\tiny] {non} (exact);
+    \draw[arr] (exact) -- node[above, font=\tiny] {oui} (ok_exact);
+    \draw[arr] (exact) -- node[left,  font=\tiny] {non} (cands);
+    \draw[arr] (cands) -- node[above, font=\tiny] {$k=0$} (nf);
+    \draw[arr] (cands) -- node[left,  font=\tiny] {$k\geq1$} (lev);
+    \draw[arr] (lev) -- (out);
+  \end{tikzpicture}
+  \caption{Pipeline de correction orthographique en six étapes : de la détection
+    d'entité à la sélection du meilleur candidat par distance de Levenshtein.}
+  \label{fig:spell_pipeline}
+\end{figure}
+
+La figure~\ref{fig:spell_pipeline} montre que le calcul de Levenshtein n'est déclenché
+que lorsque la recherche par préfixe retourne plusieurs candidats ambigus, limitant le
+coût de calcul aux cas réellement douteux. La recherche par préfixe utilise
+\texttt{bisect.bisect\_left} sur la liste triée du lexique, offrant une complexité
+$O(\log N + k)$ où $N$ est la taille du lexique et $k$ le nombre de candidats.
+
+\section{Résultats et vulnérabilité identifiée}
+
+\begin{table}[ht]
+\centering
+\caption{Exemples de corrections sur le corpus ADIT}
+\label{tab:spell_examples}
+\begin{tabular}{lllrc}
+\toprule
+\textbf{Terme saisi} & \textbf{Correction} & \textbf{Lemme retourné} & \textbf{dist.} & \textbf{Statut} \\
+\midrule
+\texttt{nanotechnolgie} & \texttt{nanotechnologie} & nanotechnologie & 1 & single\_candidate \\
+\texttt{robotiqe}       & \texttt{robotique}       & robot           & 1 & single\_candidate \\
+\texttt{algorithmf}     & \texttt{algorithme}      & algorithme      & 1 & best\_candidate   \\
+\texttt{banotechnologie} & —                       & —               & — & not\_found        \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La \textbf{vulnérabilité principale} de l'heuristique est son aveuglement aux erreurs
+portant sur le \emph{début} du mot. Comme l'illustre le tableau~\ref{tab:spell_examples},
+\texttt{banotechnologie} (distance~1 de \texttt{nanotechnologie}) n'est pas retrouvé car
+aucune entrée du lexique ne commence par \texttt{ban}. L'alternative robuste est
+l'indexation par \textbf{trigrammes de caractères} : ces deux mots partagent 12 trigrammes
+sur 13 (indice de Jaccard $\approx 0{,}92$), ce qui les rendrait voisins dans un index
+trigram. Cette approche, utilisée en pratique par les moteurs de recherche industriels,
+serait naturellement envisageable comme amélioration future. La couverture de tests
+atteint 95,77\,\% sur 284 tests.

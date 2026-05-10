@@ -1,0 +1,91 @@
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Lemmatisation et index inversé}
+\label{chap:td3}
+% ══════════════════════════════════════════════════════════════════════════════
+
+La troisième étape apporte deux améliorations majeures à la représentation du corpus.
+D'une part, la \textbf{lemmatisation} réduit chaque forme fléchie à sa forme canonique,
+améliorant le rappel en regroupant sous un même terme des variantes morphologiques
+(\texttt{voitures}, \texttt{voiture} → \texttt{voiture}). D'autre part, la construction
+de l'\textbf{index inversé} — structure canonique de la RI selon le cours (chapitres 1
+et 7) — fournit pour chaque terme la liste des documents qui le contiennent, permettant
+de répondre en O(1) à toute requête booléenne.
+
+\section{Comparaison des méthodes de lemmatisation}
+
+Deux approches sont implémentées derrière une interface abstraite commune
+\texttt{BaseLemmatizer}, permettant leur substitution transparente :
+
+\begin{itemize}
+  \item \textbf{SpaCy} (\texttt{fr\_core\_news\_sm}) — lemmatisation linguistique à
+        base de modèle pré-entraîné ; produit des lemmes valides du dictionnaire
+        (\texttt{innovations} $\to$ \texttt{innovation}).
+  \item \textbf{Snowball} (NLTK) — racinisation par règles morphologiques suffixales ;
+        produit des racines tronquées non nécessairement valides
+        (\texttt{innovations} $\to$ \texttt{innov}).
+\end{itemize}
+
+Le critère de sélection automatique est le \textbf{taux de compression} $\tau_c =
+|\mathcal{L}|/|\mathcal{V}|$, rapport entre le nombre de lemmes distincts et le nombre
+de formes de surface distinctes. Un taux bas signifie un meilleur regroupement et donc
+un meilleur rappel en RI.
+
+\begin{table}[ht]
+\centering
+\caption{Comparaison quantitative des deux méthodes de lemmatisation sur 9\,843 formes}
+\label{tab:lemma_compare}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Méthode} & \textbf{Formes} & \textbf{Lemmes/racines} & $\tau_c$ & \textbf{Regroupement} \\
+\midrule
+SpaCy    & 9\,843 & 7\,421 & 0,754 & 1,33$\times$ \\
+Snowball & 9\,843 & 6\,192 & 0,629 & 1,59$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:lemma_compare} montre que Snowball est sélectionné automatiquement
+dans la plupart des exécutions grâce à son facteur de regroupement supérieur (1,59$\times$
+contre 1,33$\times$). Sa principale limite est la lisibilité humaine des racines
+produites (\texttt{technolog}, \texttt{recherch}), qui ne constituent pas des mots
+valides du dictionnaire.
+
+\section{Construction de l'index inversé}
+
+La classe \texttt{InvertedIndexBuilder} parse le corpus XML une seule fois à
+l'initialisation et expose quatre méthodes spécialisées selon le type de champ :
+
+\begin{lstlisting}[caption={Index pondéré multi-champs : titre$\times$2 + texte$\times$1},
+  label={lst:combined_index}]
+def build_combined_index(
+    self, fields: list[str], output_path: Path,
+    weights: dict[str, float] | None = None,
+) -> int:
+    _weights = weights or {f: 1.0 for f in fields}
+    index: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    for article_id, doc in self._iter_documents():
+        for field in fields:
+            el = doc.find(field)
+            if el is None or not el.text:
+                continue
+            w = _weights.get(field, 1.0)
+            for token in _tokenize(el.text):
+                index[token][article_id] += w
+    self._write_float_index(index, output_path)
+    return len(index)
+\end{lstlisting}
+
+Le titre reçoit un poids double (\texttt{weights=\{"titre":~2.0,~"texte":~1.0\}}) car
+il constitue un résumé thématique rédigé par l'auteur. Ce paramétrage s'inspire du
+modèle BM25 et améliore le classement des documents dont le terme apparaît dans le
+titre.
+
+\section{Résultats}
+
+Sept fichiers d'index sont produits, couvrant l'ensemble des axes de recherche utiles :
+texte libre (titre, texte, combiné), facettes de navigation (rubrique, auteur, bulletin)
+et filtre temporel (date par mois/année). La lemmatisation Snowball réduit le vocabulaire
+de 56\,\% (14\,177 formes → 6\,192 racines), et un second filtrage TF-IDF sur les lemmes
+élimine 47 lemmes grammaticaux supplémentaires (\texttt{être}, \texttt{avoir},
+\texttt{pouvoir}\ldots) non capturés en TD2. La suite de 224 tests atteint 95,93\,\% de
+couverture.
