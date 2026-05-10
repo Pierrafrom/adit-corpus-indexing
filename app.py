@@ -285,7 +285,7 @@ def main() -> None:
             for r in report.results:
                 table_data.append(
                     {
-                        "Requête": r.query[:60] + ("…" if len(r.query) > 60 else ""),
+                        "Requête": r.query,
                         "Précision": _highlight_metric(r.precision, 0.8, 0.5),
                         "Rappel": _highlight_metric(r.recall, 0.8, 0.5),
                         "F1": _highlight_metric(r.f1, 0.8, 0.5),
@@ -298,7 +298,7 @@ def main() -> None:
                     }
                 )
 
-            st.dataframe(table_data, use_container_width=True)
+            st.table(table_data)
 
             # Export
             if st.button("💾 Télécharger les résultats (JSON)"):
