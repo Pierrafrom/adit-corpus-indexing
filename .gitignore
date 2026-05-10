@@ -50,8 +50,11 @@ desktop.ini
 
 # =============================================================================
 # Project — generated outputs (never commit these)
+# Exception: outputs/td3/ is committed for Docker deployment (search indexes).
+# Note: must use outputs/* (not outputs/) to allow the !outputs/td3 negation.
 # =============================================================================
-outputs/
+outputs/*
+!outputs/td3
 out/
 logs/
 backup/

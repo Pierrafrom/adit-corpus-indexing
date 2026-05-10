@@ -10,13 +10,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=4.14.3",
-    "fr-core-news-sm",
     "jupyter>=1.1.1",
     "lxml>=6.0.2",
     "matplotlib>=3.10.8",
     "nltk>=3.9.4",
     "snowball>=0.5.6",
-    "spacy>=3.8.11",
+    "streamlit>=1.45.0",
 ]
 
 [project.scripts]
@@ -25,6 +24,7 @@ td2 = "adit_corpus_indexing.pipelines.td2_pipeline:main"
 td3 = "adit_corpus_indexing.pipelines.td3_pipeline:main"
 td4 = "adit_corpus_indexing.pipelines.td4_pipeline:main"
 td5 = "adit_corpus_indexing.pipelines.td5_pipeline:main"
+td6 = "adit_corpus_indexing.pipelines.td6_pipeline:main"
 adit-pipeline = "adit_corpus_indexing.pipelines.full_pipeline:main"
 
 [tool.setuptools.packages.find]
@@ -68,6 +68,7 @@ omit = [
     "*/indexing/create_inverse_file.py",
     "*/pipelines/td4_pipeline.py",
     "*/pipelines/td5_pipeline.py",
+    "*/pipelines/td6_pipeline.py",
 ]
 
 [tool.coverage.report]
@@ -78,6 +79,10 @@ show_missing = true
 fr-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl" }
 
 [dependency-groups]
+nlp = [
+    "fr-core-news-sm",
+    "spacy>=3.8.11",
+]
 dev = [
     "lxml-stubs>=0.5.1",
     "mypy>=1.19.1",
