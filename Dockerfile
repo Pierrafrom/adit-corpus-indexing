@@ -16,11 +16,11 @@ RUN uv sync --frozen --no-group nlp --no-group dev
 # Copy application code and pre-generated indexes
 COPY app.py ./
 COPY .streamlit/ .streamlit/
-COPY data/ data/
+COPY data/ground_truth.json data/ground_truth.json
 COPY outputs/td3/ outputs/td3/
 
 # Serve original HTML articles at /app/static/{doc_id}.htm via Streamlit static serving
-COPY data/BULLETINS/ static/
+COPY static/ static/
 
 EXPOSE 8501
 
