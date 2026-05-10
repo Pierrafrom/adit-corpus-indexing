@@ -2,96 +2,72 @@
 
 **Pierre Fromont Boissel & Maxime Doudy** — UTC Printemps 2026
 
-Système d'indexation et de recherche d'information sur ~326 articles HTML issus des
-bulletins de veille technologique ADIT (2011–2014).
-
----
-
-## Prérequis
-
-### Sans Docker
-
-| Outil | Version | Installation |
-|---|---|---|
-| Python | 3.12+ | [python.org](https://www.python.org/) |
-| uv | latest | `pip install uv` ou `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-
-### Avec Docker
-
-| Outil | Version |
-|---|---|
-| Docker | 24+ |
-| Docker Compose | v2 (intégré à Docker Desktop) |
+Système d'indexation et de recherche d'information sur ~326 articles HTML
+issus des bulletins de veille technologique ADIT (2011–2014).
 
 ---
 
 ## Lancer l'application
 
-### Option A — Sans Docker (local)
+### Option A — Sans Docker (recommandé)
+
+**Prérequis :** Python 3.12+ et `uv`
 
 ```bash
-# 1. Installer les dépendances (hors NLP — non nécessaire, index déjà générés)
+# Installer uv (si pas déjà fait)
+pip install uv
+```
+
+```bash
+# Installer les dépendances
 uv sync --no-group nlp --no-group dev
 
-# 2. Lancer l'interface Streamlit
+# Lancer l'interface
 uv run streamlit run app.py
 ```
 
-Ouvrir [http://localhost:8501](http://localhost:8501) dans le navigateur.
-
-> Les index et fichiers générés sont fournis dans `outputs/td3/`.
-> Il n'est **pas nécessaire** de relancer les pipelines TD1–TD3.
+Ouvrir **http://localhost:8501** dans le navigateur.
 
 ### Option B — Avec Docker
+
+**Prérequis :** Docker Desktop (inclut Compose v2)
 
 ```bash
 docker compose up
 ```
 
-Ouvrir [http://localhost:8501](http://localhost:8501) dans le navigateur.
+Ouvrir **http://localhost:8501** dans le navigateur.
+Arrêter : `Ctrl+C` puis `docker compose down`.
 
-Pour arrêter : `Ctrl+C` puis `docker compose down`.
-
-> **WSL2** : si `docker compose up` échoue avec `docker-credential-desktop.exe not found`,
-> éditer `~/.docker/config.json` et remplacer `"credsStore": "desktop.exe"` par `"credsStore": ""`.
-
----
-
-## Régénérer les index (optionnel)
-
-> Nécessite le corpus source dans `data/BULLETINS/` (disponible sur Moodle LO17).
-
-```bash
-# Installer toutes les dépendances (incluant SpaCy)
-uv sync
-
-# Lancer le pipeline complet TD1 → TD3
-uv run adit-pipeline
-
-# Ou par étape :
-uv run td1   # HTML → corpus.xml
-uv run td2   # anti-dictionnaire
-uv run td3   # lemmatisation + index inversés
-```
+> **WSL2 uniquement** — si erreur `docker-credential-desktop.exe not found` :
+> éditer `~/.docker/config.json` → remplacer `"credsStore": "desktop.exe"` par `"credsStore": ""`
 
 ---
 
-## Structure du projet
+## Structure
 
 ```
 src/adit_corpus_indexing/
-├── io/            # parseur HTML, constructeur XML
-├── nlp/           # tokenizer, lemmatizer, antidictionnaire, correcteur, parseur de requêtes
-├── indexing/      # TF-IDF, index inversés
-├── search/        # moteur de recherche, évaluateur, chargeur d'index
-├── pipelines/     # pipelines TD1–TD6
-└── models.py      # dataclasses (Article, ParsedQuery, SearchResult…)
+├── io/          # parseur HTML, constructeur XML
+├── nlp/         # tokenizer, lemmatizer, antidictionnaire, correcteur, parseur de requêtes
+├── indexing/    # TF-IDF, construction des index inversés
+├── search/      # moteur de recherche, évaluateur, chargeur d'index
+├── pipelines/   # pipelines TD1–TD6
+└── models.py    # dataclasses (Article, ParsedQuery, SearchResult…)
 
-outputs/td3/       # fichiers générés (index, corpus_final.xml, lemmes…)
-data/              # ground_truth.json + BULLETINS/ (non versionné)
-reports/           # comptes-rendus de TD (français)
-tests/             # suite pytest (369 tests, couverture 93%+)
-app.py             # interface Streamlit (TD6)
+outputs/td3/
+├── indexes/     # index inversés (titre, texte, rubrique, date…)
+├── corpus_final.xml      # corpus nettoyé et lemmatisé
+└── lemmes_snowball.tsv   # lexique Snowball (utilisé comme correcteur)
+
+data/
+└── ground_truth.json     # jeu d'évaluation (10 requêtes)
+
+reports/
+└── compte-rendu-td6.md   # rapport de TD
+
+tests/                    # suite pytest — 369 tests, couverture 93%
+app.py                    # interface Streamlit
 ```
 
 ---
@@ -101,16 +77,4 @@ app.py             # interface Streamlit (TD6)
 ```bash
 uv sync --group dev
 uv run pytest
-```
-
-Couverture minimale requise : 80 % (configurée dans `pyproject.toml`).
-
----
-
-## Qualité du code
-
-```bash
-uv run ruff format src/ tests/   # formatage
-uv run ruff check src/ tests/    # lint
-uv run mypy src/                 # typage statique
 ```
