@@ -25,8 +25,12 @@ from src.adit_corpus_indexing.search.evaluator import Evaluator
 _OUTPUTS = Path("outputs/td3")
 _INDEXES = _OUTPUTS / "indexes"
 _CORPUS = _OUTPUTS / "corpus_final.xml"
+_DISPLAY_CORPUS = _OUTPUTS / "corpus_filtered.xml"
 _LEXICON = _OUTPUTS / "lemmes_snowball.tsv"
 _GROUND_TRUTH = Path("data/ground_truth.json")
+
+# Static-served HTML articles (Streamlit enableStaticServing + COPY data/BULLETINS/ static/)
+_STATIC_ARTICLES = Path("static")
 
 # ---------------------------------------------------------------------------
 # Demo queries shown when the user presses "Lancer le scénario de démo"
@@ -51,6 +55,7 @@ def _get_engine() -> SearchEngine:
         indexes_dir=_INDEXES,
         corpus_path=_CORPUS,
         lexicon_path=_LEXICON,
+        display_corpus_path=_DISPLAY_CORPUS if _DISPLAY_CORPUS.exists() else None,
     )
 
 
@@ -65,14 +70,21 @@ def _display_results(results: list[SearchResult], keywords: list[str]) -> None:
         return
 
     st.success(f"**{len(results)} résultat(s)** trouvé(s)")
+    articles_available = _STATIC_ARTICLES.exists()
 
     for r in results:
         label = f"📄 [{r.doc_id}] {r.titre or '(titre vide)'}"
         with st.expander(label, expanded=False):
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns([2, 3, 2, 2])
             col1.metric("Date", r.date or "—")
             col2.metric("Rubrique", r.rubrique or "—")
             col3.metric("Score", f"{r.score:.2f}")
+            if articles_available:
+                col4.link_button(
+                    "📰 Article original",
+                    f"/app/static/{r.doc_id}.htm",
+                    use_container_width=True,
+                )
 
             snippet = r.snippet
             for kw in keywords:
