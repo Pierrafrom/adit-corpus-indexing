@@ -114,7 +114,11 @@ def main() -> None:
 
     # ── Header ──────────────────────────────────────────────────────────
     st.title("🔍 Moteur de recherche ADIT")
-    st.caption("LO17 — TD6 | Pierre Fromont Boissel | UTC Printemps 2026")
+    st.caption(
+        "LO17 — Moteur de recherche ADIT"
+        " | Pierre Fromont Boissel & Maxime Doudy"
+        " | UTC Printemps 2026"
+    )
     st.divider()
 
     engine = _get_engine()

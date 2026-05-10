@@ -332,6 +332,7 @@ _STOP_WORDS: frozenset[str] = frozenset(
         "veux",
         "voudrais",
         "voulez",
+        "voir",
         "souhaiter",
         "souhaite",
         "souhaitez",
