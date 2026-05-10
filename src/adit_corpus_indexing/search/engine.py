@@ -289,9 +289,7 @@ class SearchEngine:
         logger.debug("_get_rubrique_docs(%r): %d docs", rubrique, len(result))
         return result
 
-    def _get_date_docs(
-        self, date_min: str | None, date_max: str | None
-    ) -> set[int]:
+    def _get_date_docs(self, date_min: str | None, date_max: str | None) -> set[int]:
         """Return doc_ids whose publication month falls within [date_min, date_max].
 
         The date index uses ``MM/YYYY`` keys; date bounds are ``YYYY-MM-DD`` ISO

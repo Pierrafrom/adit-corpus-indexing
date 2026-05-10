@@ -287,7 +287,16 @@ class TestSearchEngineIntegration:
         results = engine.search("Je veux les articles de la rubrique Focus")
         doc_ids = {r.doc_id for r in results}
         expected = {
-            67068, 67383, 67553, 67554, 67555, 67794, 67795, 67937, 67938, 67939,
+            67068,
+            67383,
+            67553,
+            67554,
+            67555,
+            67794,
+            67795,
+            67937,
+            67938,
+            67939,
         }
         assert expected.issubset(doc_ids)
 
