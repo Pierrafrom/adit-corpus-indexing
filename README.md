@@ -1,123 +1,116 @@
-# adit-corpus-indexing
+# LO17 — Moteur de recherche ADIT
 
-Indexing system for a corpus of ~300 HTML articles from ADIT technology watch bulletins (2011–2014).
+**Pierre Fromont Boissel & Maxime Doudy** — UTC Printemps 2026
 
-## Prerequisites
+Système d'indexation et de recherche d'information sur ~326 articles HTML issus des
+bulletins de veille technologique ADIT (2011–2014).
 
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/) — package manager
+---
 
-```bash
-pip install uv  # one-time install
-uv sync         # install project dependencies
-```
+## Prérequis
 
-## Commands
+### Sans Docker
 
-### Run the pipeline
+| Outil | Version | Installation |
+|---|---|---|
+| Python | 3.12+ | [python.org](https://www.python.org/) |
+| uv | latest | `pip install uv` ou `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 
-```bash
-uv run python -m adit_corpus_indexing.pipeline
-```
+### Avec Docker
 
-Reads all HTML files from `data/BULLETINS/` and generates `outputs/corpus.xml`.
+| Outil | Version |
+|---|---|
+| Docker | 24+ |
+| Docker Compose | v2 (intégré à Docker Desktop) |
 
-### Tests
+---
 
-```bash
-uv run pytest           # run all tests (coverage report included)
-uv run pytest -v        # verbose mode
-uv run pytest -k foo    # filter by name
-```
+## Lancer l'application
 
-Coverage is measured automatically on every run. The CI enforces a minimum of 80%.
-
-### Code quality
+### Option A — Sans Docker (local)
 
 ```bash
-uv run ruff format src/ tests/   # auto-format
-uv run ruff check src/ tests/    # lint
-uv run mypy src/                 # type checking
+# 1. Installer les dépendances (hors NLP — non nécessaire, index déjà générés)
+uv sync --no-group nlp --no-group dev
+
+# 2. Lancer l'interface Streamlit
+uv run streamlit run app.py
 ```
 
-## CI / GitHub Actions
+Ouvrir [http://localhost:8501](http://localhost:8501) dans le navigateur.
 
-| Workflow         | Trigger                             | What it does                                        |
-|------------------|-------------------------------------|-----------------------------------------------------|
-| `ci.yml`         | push on all branches / PR on `main` | ruff lint + format, mypy, pytest                    |
-| `corpus-run.yml` | manual (`workflow_dispatch`)        | runs the pipeline, uploads `corpus.xml` as artifact |
+> Les index et fichiers générés sont fournis dans `outputs/td3/`.
+> Il n'est **pas nécessaire** de relancer les pipelines TD1–TD3.
 
-To trigger a corpus run: GitHub > Actions > **Corpus pipeline** > **Run workflow**.
-An optional `sample_size` input limits the number of files processed (0 = all).
-The generated `corpus.xml` is available as a downloadable artifact for 30 days.
+### Option B — Avec Docker
 
-Dependabot checks for dependency updates weekly and opens PRs automatically.
+```bash
+docker compose up
+```
 
-## Structure
+Ouvrir [http://localhost:8501](http://localhost:8501) dans le navigateur.
 
-```text
+Pour arrêter : `Ctrl+C` puis `docker compose down`.
+
+> **WSL2** : si `docker compose up` échoue avec `docker-credential-desktop.exe not found`,
+> éditer `~/.docker/config.json` et remplacer `"credsStore": "desktop.exe"` par `"credsStore": ""`.
+
+---
+
+## Régénérer les index (optionnel)
+
+> Nécessite le corpus source dans `data/BULLETINS/` (disponible sur Moodle LO17).
+
+```bash
+# Installer toutes les dépendances (incluant SpaCy)
+uv sync
+
+# Lancer le pipeline complet TD1 → TD3
+uv run adit-pipeline
+
+# Ou par étape :
+uv run td1   # HTML → corpus.xml
+uv run td2   # anti-dictionnaire
+uv run td3   # lemmatisation + index inversés
+```
+
+---
+
+## Structure du projet
+
+```
 src/adit_corpus_indexing/
-├── models.py       # dataclasses (Article, Image)
-├── parser.py       # HTML → Article
-├── xml_builder.py  # Article → XML
-└── pipeline.py     # orchestration
+├── io/            # parseur HTML, constructeur XML
+├── nlp/           # tokenizer, lemmatizer, antidictionnaire, correcteur, parseur de requêtes
+├── indexing/      # TF-IDF, index inversés
+├── search/        # moteur de recherche, évaluateur, chargeur d'index
+├── pipelines/     # pipelines TD1–TD6
+└── models.py      # dataclasses (Article, ParsedQuery, SearchResult…)
 
-data/BULLETINS/     # source corpus (not versioned)
-outputs/            # generated files (not versioned)
-tests/              # pytest test suite
-reports/            # lab reports (French)
+outputs/td3/       # fichiers générés (index, corpus_final.xml, lemmes…)
+data/              # ground_truth.json + BULLETINS/ (non versionné)
+reports/           # comptes-rendus de TD (français)
+tests/             # suite pytest (369 tests, couverture 93%+)
+app.py             # interface Streamlit (TD6)
 ```
 
-## Contributing
+---
 
-### Branch workflow
-
-```text
-main          ← protected (see rules below)
-feat/<topic>  ← feature branches — open a PR to merge into main
-fix/<topic>   ← bug fix branches
-refactor/...  ← refactoring branches
-```
-
-### Branch protection rules on `main`
-
-| Rule                    | Effect                                         |
-|-------------------------|------------------------------------------------|
-| No direct push          | All changes must go through a PR               |
-| No force push           | `git push --force` is rejected                 |
-| No deletion             | The `main` branch cannot be deleted            |
-| Linear history required | No merge commits — rebase or squash only       |
-| 1 approval required     | At least one reviewer must approve the PR      |
-| Stale reviews dismissed | A new push invalidates previous approvals      |
-| CI must be green        | All 4 checks must pass before merge is allowed |
-
-### To contribute
+## Tests
 
 ```bash
-git checkout -b feat/my-feature
-# ... work ...
-git push origin feat/my-feature
-gh pr create   # open PR via GitHub CLI
+uv sync --group dev
+uv run pytest
 ```
 
-### Local pre-push hook
+Couverture minimale requise : 80 % (configurée dans `pyproject.toml`).
 
-Install once after cloning:
+---
+
+## Qualité du code
 
 ```bash
-cp scripts/pre-push .git/hooks/pre-push
-chmod +x .git/hooks/pre-push
+uv run ruff format src/ tests/   # formatage
+uv run ruff check src/ tests/    # lint
+uv run mypy src/                 # typage statique
 ```
-
-Runs ruff lint, ruff format check, and pytest before every push — catches failures locally before they reach GitHub.
-
-### CI checks (run automatically on every push)
-
-| Check       | Command                                  |
-|-------------|------------------------------------------|
-| Ruff lint   | `uv run ruff check src/ tests/`          |
-| Ruff format | `uv run ruff format --check src/ tests/` |
-| Mypy        | `uv run mypy src/`                       |
-| Pytest      | `uv run pytest --tb=short -q`            |
-
-All four must pass for a PR to be mergeable into `main`.
