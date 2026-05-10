@@ -206,10 +206,7 @@ def main() -> None:
                     f"opérateurs={pq.operateurs}"
                 )
 
-            st.write(
-                f"⏱ {elapsed_ms:.1f} ms | "
-                f"**{len(results)} résultat(s)**"
-            )
+            st.write(f"⏱ {elapsed_ms:.1f} ms | **{len(results)} résultat(s)**")
             _display_results(results, pq.mots_cles)
 
     # ── Evaluation panel ─────────────────────────────────────────────────
@@ -218,6 +215,34 @@ def main() -> None:
             st.error(f"Fichier ground truth introuvable : `{_GROUND_TRUTH}`")
         else:
             st.subheader("📊 Évaluation expérimentale")
+
+            # ── Explications P / R / F1 ──────────────────────────────────
+            with st.expander("ℹ️ Comment lire ces métriques ?", expanded=True):
+                st.markdown(
+                    "Pour chaque requête, les résultats du moteur sont comparés"
+                    " à un *ground truth* vérifié par grep direct sur les index."
+                    "\n\n**Trois compteurs** :"
+                    "\n- **TP** : retournés ET pertinents"
+                    "\n- **FP** : retournés mais non pertinents (bruit)"
+                    "\n- **FN** : pertinents mais non retournés (silence)"
+                )
+                col_p, col_r, col_f = st.columns(3)
+                col_p.info(
+                    "**Précision** = TP / (TP + FP)\n\n"
+                    "Quelle fraction des résultats est pertinente ?\n\n"
+                    "P = 1.0 → zéro bruit."
+                )
+                col_r.info(
+                    "**Rappel** = TP / (TP + FN)\n\n"
+                    "Quelle fraction des pertinents est retrouvée ?\n\n"
+                    "R = 1.0 → zéro silence."
+                )
+                col_f.info(
+                    "**F1** = 2·P·R / (P + R)\n\n"
+                    "Moyenne harmonique de P et R.\n\n"
+                    "La **macro-moyenne** est la moyenne sur les 10 requêtes."
+                )
+
             with st.spinner("Évaluation en cours (100 exécutions par requête)…"):
                 evaluator = Evaluator(engine, _GROUND_TRUTH)
                 report = evaluator.run()
@@ -231,6 +256,31 @@ def main() -> None:
 
             # Per-query table
             st.subheader("Résultats par requête")
+
+            with st.expander("📖 Légende des colonnes", expanded=False):
+                st.markdown(
+                    "| Colonne | Calcul | Sens |\n"
+                    "|---|---|---|\n"
+                    "| **Précision** | TP/(TP+FP) |"
+                    " fraction des résultats pertinents |\n"
+                    "| **Rappel** | TP/(TP+FN) |"
+                    " fraction des pertinents retrouvés |\n"
+                    "| **F1** | 2·P·R/(P+R) |"
+                    " compromis P/R en un seul chiffre |\n"
+                    "| **Résultats** | card(retournés) |"
+                    " nb de docs retournés par le moteur |\n"
+                    "| **Pertinents** | card(ground truth) |"
+                    " nb de docs attendus (jeu de test) |\n"
+                    "| **TP** | card(retournés ∩ GT) |"
+                    " bonnes réponses |\n"
+                    "| **FP** | card(retournés \\ GT) |"
+                    " retournés à tort (bruit) |\n"
+                    "| **FN** | card(GT \\ retournés) |"
+                    " pertinents manqués (silence) |\n"
+                    "| **Temps (ms)** | moy. 100 exéc. |"
+                    " performance temporelle |"
+                )
+
             table_data = []
             for r in report.results:
                 table_data.append(
