@@ -81,7 +81,7 @@ def _display_results(results: list[SearchResult], keywords: list[str]) -> None:
             if articles_available:
                 col4.link_button(
                     "📰 Article original",
-                    f"/app/static/{r.doc_id}.htm",
+                    f"/app/static/BULLETINS/{r.doc_id}.htm",
                     use_container_width=True,
                 )
 
